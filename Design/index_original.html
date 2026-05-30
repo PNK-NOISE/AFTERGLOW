@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIKROLOOP XT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paint-white: #EAEAEA;
+      --paint-off: #2A2C30;
+      --led-on: #FFDD99; 
+      
+      --text-main: #0B0C0E; 
+      --text-muted: #242831; 
+      
+      --panel-bg: rgba(255, 255, 255, 0.85); 
+      --panel-border: rgba(0, 0, 0, 0.25);
+      
+      --primary: #FFDD99;
+      --primary-glow: rgba(255, 221, 153, 0.9);
+    }
+
+    * { 
+      box-sizing: border-box; 
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      background-color: #111216; 
+    }
+
+    #scale-wrapper {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 942px;
+      height: 500px;
+      background-image: url('bg_inspired.png');
+      background-size: cover;
+      background-position: center;
+      transform: translate(-50%, -50%) scale(1);
+      transform-origin: center center;
+    }
+
+    .plugin-window {
+      width: 100%;
+      height: 100%;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.20); 
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--panel-border);
+      padding-bottom: 4px;
+      height: 34px;
+    }
+    .brand-logo-img {
+      height: 22px; 
+      object-fit: contain;
+      margin-left: 10px;
+    }
+    .header-center-info {
+      font-size: 8px; 
+      font-weight: 800; 
+      color: var(--text-muted); 
+      letter-spacing: 1.5px; 
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .preset-ui {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-right: 10px;
+    }
+    
+    /* BLENDED IN SELECTS & READOUTS */
+    .control-value {
+      background: rgba(255, 255, 255, 0.95); 
+      color: var(--text-main); 
+      border: 1px solid rgba(0, 0, 0, 0.3);
+      padding: 2px 4px;
+      border-radius: 3px; 
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: 900;
+      outline: none;
+      box-shadow: 
+        inset 1px 1px 3px rgba(0,0,0,0.12), 
+        0 1px 1px rgba(255,255,255,0.8); 
+      position: relative;
+      z-index: 20; 
+      text-align: center;
+      width: 100%;
+    }
+
+    .select-dropdown, .preset-btn {
+      background: rgba(255, 255, 255, 0.95); 
+      color: var(--text-main);
+      border: 1px solid rgba(0,0,0,0.3);
+      padding: 3px 8px;
+      border-radius: 3px; 
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 900;
+      outline: none;
+      box-shadow: 
+        inset 1px 1px 3px rgba(0,0,0,0.12), 
+        0 1px 1px rgba(255,255,255,0.8); 
+      position: relative;
+      z-index: 20; 
+      cursor: pointer;
+    }
+
+    .preset-btn:active {
+      box-shadow: inset 2px 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .control-select {
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--text-main);
+      border: 1px solid rgba(0, 0, 0, 0.3);
+      padding: 4px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: bold;
+      outline: none;
+      box-shadow: 
+        inset 1px 1px 3px rgba(0,0,0,0.12), 
+        0 1px 1px rgba(255,255,255,0.8);
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+    .control-select option {
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--text-main);
+    }
+
+    /* PANELS LAYOUT */
+    .panels-container {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: calc(100% - 40px);
+      padding: 2px 4px;
+    }
+    
+    /* GLASS TUBES */
+    .glass-tube {
+      width: 16px;
+      height: calc(100% - 20px);
+      background: rgba(14, 14, 16, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 
+        inset 0 0 8px rgba(0, 0, 0, 0.9),
+        0 1px 3px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      flex-shrink: 0;
+      margin: 10px 0;
+    }
+    .glass-tube::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20%;
+      width: 20%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+    .tube-filament {
+      width: 4px;
+      height: 0%;
+      background: linear-gradient(to top, #ff3c00, #ff9900, #ffcc00);
+      border-radius: 2px;
+      box-shadow: 
+        0 0 3px #ff3c00,
+        0 0 8px #ff9900,
+        0 0 16px #ffcc00;
+      transition: height 0.05s ease-out, box-shadow 0.05s ease-out;
+    }
+
+    /* OBSIDIAN PANEL STYLE */
+    .panel {
+      background: transparent;
+      border-radius: 4px; 
+      padding: 8px 10px; 
+      border: none;
+      box-shadow: none; 
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .panel-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2px 4px 2px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      height: 20px;
+      flex-shrink: 0;
+    }
+    
+    .panel-title {
+      font-size: 9px;
+      font-weight: 900;
+      color: var(--text-main);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* THREE COLUMNS */
+    .left-panel-col, .right-panel-col {
+      width: 220px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .center-column {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      width: 420px;
+      height: 100%;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      width: 100%; 
+    }
+
+    .control-label {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      white-space: nowrap;
+      position: relative;
+      z-index: 20; 
+    }
+
+    /* KNOBS styling */
+    .knob-container {
+      position: relative;
+      display: flex; justify-content: center; align-items: center;
+      overflow: visible; 
+      z-index: 10;
+    }
+    
+    .knob-container.big { width: 62px; height: 62px; }
+    .knob-container.small { width: 42px; height: 42px; }
+    
+    .knob-layer {
+      position: absolute;
+      width: 100%; height: 100%;
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .knob-shadow {
+      display: none;
+    }
+
+    .knob-move {
+      background-image: url('KNOB/MOVING.png');
+      z-index: 2;
+      transform: rotate(-135deg);
+      transform-origin: center center;
+    }
+    .knob-stilla {
+      background-image: url('KNOB/STATIONARY.png');
+      pointer-events: none;
+      z-index: 1;
+    }
+    .knob-pekare {
+      display: none;
+    }
+    .knob-hit-area {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: 50%;
+      cursor: ns-resize;
+      z-index: 10;
+    }
+
+    /* BUTTONS */
+    .btn {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.5));
+      z-index: 10;
+    }
+    .btn.active {
+      transform: translateY(1.5px) scale(0.96);
+      filter: drop-shadow(1px 2px 1px rgba(0,0,0,0.6));
+    }
+    .button-sprite {
+      width: 100%; height: 100%;
+      background-image: url('button_matte.png');
+      background-size: cover;
+      background-position: center;
+      border-radius: 4px;
+    }
+    .btn-led {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 28%; height: 28%;
+      background: var(--paint-off);
+      border-radius: 1px;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.9);
+      transition: background 0.1s;
+    }
+    .btn.active .btn-led {
+      background: var(--led-on);
+      box-shadow: 
+        inset 1px 1px 2px rgba(255,255,255,0.8),
+        0 0 4px var(--primary-glow);
+    }
+
+    /* CRT SCREEN */
+    .vintage-screen {
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      border: 2px solid #333333;
+      border-radius: 4px;
+      box-shadow: 
+        inset 0 0 20px rgba(0, 0, 0, 0.95),
+        0 1px 2px rgba(255, 255, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 10px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #ffffff;
+      margin: 0;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .vintage-screen::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(255, 255, 255, 0.03) 50%, rgba(0, 0, 0, 0.15) 50%);
+      z-index: 10;
+      background-size: 100% 4px;
+      pointer-events: none;
+    }
+
+    .vintage-screen::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0) 80%);
+      pointer-events: none;
+      z-index: 9;
+    }
+
+    .screen-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .screen-overlay-text {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      pointer-events: none;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .screen-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      opacity: 0.85;
+    }
+
+    .screen-middle {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .screen-bottom {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom Preset Save Modal -->
+<div id="presetModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:rgba(255,255,255,0.35); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:24px; border-radius:5px; border: 1px solid rgba(255,255,255,0.3); display:flex; flex-direction:column; gap:15px; width:300px; box-shadow:0 15px 35px rgba(0,0,0,0.3);">
+    <div style="font-weight:900; font-size:14px; color:var(--text-main); text-transform:uppercase; letter-spacing:1px;">Save Preset</div>
+    <input type="text" id="presetNameInput" style="padding:10px; border-radius:3px; border:1px solid rgba(0,0,0,0.25); box-shadow:inset 1px 1px 3px rgba(0,0,0,0.1); background:rgba(255,255,255,0.9); color:#000000; font-family:'Inter', sans-serif; font-size:14px; font-weight:800; outline:none;" placeholder="Preset Name">
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:5px;">
+      <button onclick="document.getElementById('presetModal').style.display='none'; if(isJuce) callJuce('setKeyboardFocus', [false]);" class="preset-btn">Cancel</button>
+      <button onclick="submitPresetSave()" class="preset-btn" style="color: #000; background: var(--led-on);">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="scale-wrapper">
+  <div class="plugin-window">
+    
+    <!-- HEADER -->
+    <div class="header">
+      <img src="MIKROLOOP_2.png" class="brand-logo-img" alt="MIKROLOOP">
+      <div class="header-center-info">
+        OBSIDIAN SERIES // MULTI-MODE TAPE DELAY & GLITCH
+      </div>
+      <div class="preset-ui">
+        <select class="select-dropdown" id="presetSelector" onchange="loadPreset()">
+          <option>Init Preset</option>
+        </select>
+        <button class="preset-btn" onclick="savePreset()">Save</button>
+      </div>
+    </div>
+
+    <!-- PANELS CONTAINER -->
+    <div class="panels-container">
+      
+      <!-- LEFT COLUMN: CONSOLIDATED DELAY -->
+      <div class="left-panel-col">
+        <div class="panel delay-panel" style="width: 100%; height: 100%;">
+          <div class="panel-header">
+            <div class="panel-title">Delay Engine</div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; flex: 1; align-content: space-evenly; justify-items: center; padding-top: 6px;">
+            <!-- Tempo L -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="delay1Tempo" data-val="0.6" data-format="" data-min="0" data-max="20">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Tempo L</div>
+              <div class="control-value">1/16</div>
+            </div>
+
+            <!-- Tempo R -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="delay2Tempo" data-val="0.6" data-format="" data-min="0" data-max="20">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Tempo R</div>
+              <div class="control-value">1/16</div>
+            </div>
+
+            <!-- Offset -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayOffset" data-val="0.5" data-format="%" data-min="-20" data-max="20">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Offset</div>
+              <div class="control-value">0%</div>
+            </div>
+            
+            <!-- Feedback -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayFeedback" data-val="0.5" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Feedback</div>
+              <div class="control-value">50%</div>
+            </div>
+            
+            <!-- Duck -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayDuck" data-val="0.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Duck</div>
+              <div class="control-value">0%</div>
+            </div>
+            
+            <!-- Dry/Wet Mix -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayDryWet" data-val="0.5" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Mix</div>
+              <div class="control-value">50%</div>
+            </div>
+            
+            <!-- Wet Low Cut -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="wetLowCut" data-val="0.0" data-format="Hz" data-min="20" data-max="2000">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Low Cut</div>
+              <div class="control-value">20 Hz</div>
+            </div>
+            
+            <!-- Wet High Cut -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="wetHighCut" data-val="1.0" data-format="Hz" data-min="200" data-max="20000">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">High Cut</div>
+              <div class="control-value">20k Hz</div>
+            </div>
+          </div>
+          
+          <!-- Delay activation buttons -->
+          <div style="display: flex; flex-direction: row; gap: 24px; justify-content: center; width: 100%; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; margin-top: 4px;">
+            <div class="control-group" style="width: 36px; gap: 2px;">
+              <div class="btn active" data-id="delayOn" onclick="toggleButton(this)"><div class="button-sprite"></div><div class="btn-led"></div></div>
+              <div class="control-label">ON</div>
+            </div>
+            <div class="control-group" style="width: 36px; gap: 2px;">
+              <div class="btn" data-id="delayReverse" onclick="toggleButton(this)"><div class="button-sprite"></div><div class="btn-led"></div></div>
+              <div class="control-label">REV</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- LEFT GLASS TUBE (Delay 1 Output meter) -->
+      <div class="glass-tube" id="leftTube">
+        <div class="tube-filament"></div>
+      </div>
+      
+      <!-- CENTER COLUMN: MASTER, CRT SCREEN, TAPE -->
+      <div class="center-column">
+        
+        <!-- MASTER PANEL (Top Center) -->
+        <div class="panel master-panel" style="width: 100%; height: 115px;">
+          <div class="panel-header">
+            <div class="panel-title">Master Output</div>
+          </div>
+          <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-evenly; flex: 1; padding-top: 4px;">
+            <!-- Global Mix -->
+            <div class="control-group" style="width: 58px;">
+              <div class="knob-container small" data-id="dryWet" data-val="1.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Mix</div>
+              <div class="control-value">100%</div>
+            </div>
+            
+            <!-- Master Width -->
+            <div class="control-group" style="width: 58px;">
+              <div class="knob-container small" data-id="wetWidth" data-val="1.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Width</div>
+              <div class="control-value">100%</div>
+            </div>
+            
+            <!-- Output Gain -->
+            <div class="control-group" style="width: 58px;">
+              <div class="knob-container small" data-id="masterOutput" data-val="0.5" data-format="dB" data-min="-24" data-max="24">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Gain</div>
+              <div class="control-value">0.0 dB</div>
+            </div>
+            
+            <!-- Chorus Toggle -->
+            <div class="control-group" style="width: 50px; gap: 3px; justify-content: center;">
+              <div class="btn" data-id="chorusOn" onclick="toggleButton(this)"><div class="button-sprite"></div><div class="btn-led"></div></div>
+              <div class="control-label">Chorus</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- CRT SCREEN (Middle Center) -->
+        <div class="vintage-screen" style="width: 100%; height: 160px; flex: 1;">
+          <canvas class="screen-canvas" id="screenCanvas"></canvas>
+          <div class="screen-overlay-text">
+            <div class="screen-top">
+              <span id="screenStatus">DELAY: 1/16</span>
+              <span id="screenGr">GR: 0.0dB</span>
+            </div>
+            <div class="screen-middle"></div>
+            <div class="screen-bottom">
+              <span id="screenGlitch">GLITCH: OFF</span>
+              <span id="screenRate">TAPE: ACTIVE</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- TAPE SIMULATION PANEL (Bottom Center) -->
+        <div class="panel tape-panel" style="width: 100%; height: 115px;">
+          <div class="panel-header">
+            <div class="panel-title">Tape Simulation</div>
+            <div class="btn active" data-id="tapeOn" onclick="toggleButton(this)" style="width: 15px; height: 15px;"><div class="button-sprite"></div><div class="btn-led"></div></div>
+          </div>
+          <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-evenly; flex: 1; padding-top: 4px;">
+            <!-- Saturation -->
+            <div class="control-group" style="width: 65px;">
+              <div class="knob-container small" data-id="tapeSat" data-val="0.25" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Sat</div>
+              <div class="control-value">25%</div>
+            </div>
+            
+            <!-- Destabilize -->
+            <div class="control-group" style="width: 75px;">
+              <div class="knob-container small" data-id="tapeDestabilize" data-val="0.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Destabilize</div>
+              <div class="control-value">0%</div>
+            </div>
+            
+            <!-- Age -->
+            <div class="control-group" style="width: 65px;">
+              <div class="knob-container small" data-id="tapeAge" data-val="0.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Age</div>
+              <div class="control-value">0%</div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      
+      <!-- RIGHT GLASS TUBE (Delay 2 Output meter) -->
+      <div class="glass-tube" id="rightTube">
+        <div class="tube-filament"></div>
+      </div>
+      
+      <!-- RIGHT COLUMN: GLITCH & GRANULIZER -->
+      <div class="right-panel-col" style="gap: 8px;">
+        <!-- GLITCH ENGINE PANEL -->
+        <div class="panel glitch-panel" style="width: 100%; flex: 1;">
+          <div class="panel-header">
+            <div class="panel-title">Glitch Engine</div>
+            <div class="btn" data-id="glitchOn" onclick="toggleButton(this)" style="width: 15px; height: 15px;"><div class="button-sprite"></div><div class="btn-led"></div></div>
+          </div>
+          
+          <div class="glitch-controls-container" style="display: flex; flex-direction: column; justify-content: space-evenly; flex: 1; padding-top: 2px;">
+            <!-- Knobs Row -->
+            <div style="display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; width: 100%;">
+              <!-- Amount -->
+              <div class="control-group" style="width: 60px;">
+                <div class="knob-container small" data-id="glitchAmount" data-val="0.35" data-format="%" data-min="0" data-max="100">
+                  <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+                </div>
+                <div class="control-label">Amount</div>
+                <div class="control-value">35%</div>
+              </div>
+              
+              <!-- Glitch Reverse -->
+              <div class="control-group" style="width: 40px; gap: 2px;">
+                <div class="btn" data-id="glitchReverse" onclick="toggleButton(this)"><div class="button-sprite"></div><div class="btn-led"></div></div>
+                <div class="control-label">REV</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRANULIZER PANEL -->
+        <div class="panel granulizer-panel" style="width: 100%; flex: 1;">
+          <div class="panel-header">
+            <div class="panel-title">Granulizer</div>
+            <div class="btn" data-id="granOn" onclick="toggleButton(this)" style="width: 15px; height: 15px;"><div class="button-sprite"></div><div class="btn-led"></div></div>
+          </div>
+          
+          <div class="granulizer-controls-container" style="display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; flex: 1; padding-top: 4px;">
+            <!-- Size -->
+            <div class="control-group" style="width: 58px;">
+              <div class="knob-container small" data-id="granSize" data-val="0.2" data-format="ms" data-min="10" data-max="500">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Size</div>
+              <div class="control-value">100 ms</div>
+            </div>
+            
+            <!-- Pitch -->
+            <div class="control-group" style="width: 58px;">
+              <div class="knob-container small" data-id="granPitch" data-val="0.5" data-format="st" data-min="-12" data-max="12">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Pitch</div>
+              <div class="control-value">0 st</div>
+            </div>
+            
+            <!-- Mix -->
+            <div class="control-group" style="width: 58px;">
+              <div class="knob-container small" data-id="granMix" data-val="0.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Mix</div>
+              <div class="control-value">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPTICAL DISTORTION PANEL -->
+        <div class="panel opto-panel" style="width: 100%; flex: 1;">
+          <div class="panel-header">
+            <div class="panel-title">Optical Distortion</div>
+            <div class="btn" data-id="optoOn" onclick="toggleButton(this)" style="width: 15px; height: 15px;"><div class="button-sprite"></div><div class="btn-led"></div></div>
+          </div>
+          
+          <div class="opto-controls-container" style="display: flex; flex-direction: row; justify-content: center; align-items: center; flex: 1; padding-top: 4px;">
+            <!-- Gain -->
+            <div class="control-group" style="width: 90px;">
+              <div class="knob-container small" data-id="optoGain" data-val="0.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="control-label">Gain</div>
+              <div class="control-value">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // --------------------------------------------------------
+  // UI LOGIC (Knob Dragging & Resizing)
+  // --------------------------------------------------------
+  
+  // Resize logic to fit screen
+  function resizeUI() {
+    const wrapper = document.getElementById('scale-wrapper');
+    const scaleX = window.innerWidth / 942;
+    const scaleY = window.innerHeight / 500;
+    const scale = Math.min(scaleX, scaleY);
+    wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  window.addEventListener('resize', resizeUI);
+  window.addEventListener('load', resizeUI);
+  document.addEventListener('DOMContentLoaded', resizeUI);
+  setTimeout(resizeUI, 50);
+  setTimeout(resizeUI, 200);
+  resizeUI();
+
+  // Basic knob drag
+  let isDragging = false;
+  let currentKnob = null;
+  let startY = 0;
+  let startVal = 0;
+
+  document.addEventListener('mousedown', (e) => {
+    const isSelect = e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'select';
+    if (!isSelect) {
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+      if (typeof callJuce !== 'undefined') {
+        callJuce("setKeyboardFocus", [false]);
+      }
+    }
+    
+    if (e.target.classList.contains('knob-hit-area')) {
+      isDragging = true;
+      currentKnob = e.target.closest('.knob-container');
+      startY = e.clientY;
+      startVal = parseFloat(currentKnob.getAttribute('data-val')) || 0;
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging || !currentKnob) return;
+    
+    let delta = startY - e.clientY;
+    let sensitivity = e.shiftKey ? 0.001 : 0.005; // Fine tuning with shift
+    
+    let newVal = startVal + (delta * sensitivity);
+    newVal = Math.max(0, Math.min(1, newVal)); // Clamp 0 to 1
+    
+    currentKnob.setAttribute('data-val', newVal);
+    
+    // Update visual
+    let mappedVal = getMappedValue(currentKnob, newVal);
+    updateUIElement(currentKnob, newVal, mappedVal);
+    
+    // Send to JUCE
+    const id = currentKnob.getAttribute('data-id');
+    if (id) emitJuceSlider(id, mappedVal);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging && currentKnob) {
+      const id = currentKnob.getAttribute('data-id');
+      if (id && isJuce) {
+        window.__JUCE__.backend.emitEvent("__juce__slider" + id, { eventType: "requestInitialUpdate" });
+      }
+    }
+    isDragging = false;
+    currentKnob = null;
+  });
+
+  function getMappedValue(el, normalized) {
+    let min = parseFloat(el.getAttribute('data-min') || '0');
+    let max = parseFloat(el.getAttribute('data-max') || '100');
+    if (el.getAttribute('data-format') === 'Hz') {
+      return min * Math.pow(max / min, normalized);
+    }
+    return min + normalized * (max - min);
+  }
+
+  function updateUIElement(el, normalized, realValue) {
+    let moveLayer = el.querySelector('.knob-move');
+    let pekareLayer = el.querySelector('.knob-pekare');
+    
+    let angle = -135 + (normalized * 270);
+    if (moveLayer) moveLayer.style.transform = `rotate(${angle}deg)`;
+    if (pekareLayer) pekareLayer.style.transform = `rotate(${angle}deg)`;
+    
+    let valueDisplay = el.parentElement.querySelector('.control-value');
+    let displayStr = '';
+    
+    let format = el.getAttribute('data-format') || '';
+    if (format === 'Hz') {
+      if (realValue >= 1000) {
+        displayStr = (realValue / 1000.0).toFixed(1) + 'k Hz';
+      } else {
+        displayStr = Math.round(realValue) + ' Hz';
+      }
+    } else if (format === '%') {
+      displayStr = Math.round(normalized * 100) + '%';
+    } else if (format === 'ms') {
+      displayStr = Math.round(realValue) + ' ms';
+    } else if (format === 'st') {
+      let sign = realValue > 0.05 ? '+' : '';
+      displayStr = sign + realValue.toFixed(1) + ' st';
+    } else if (format === 'dB') {
+      displayStr = realValue.toFixed(1) + ' dB';
+    } else {
+      const id = el.getAttribute('data-id');
+      if (id === 'delay1Tempo' || id === 'delay2Tempo') {
+        const divs = [
+          "1/1", "1/1D", "1/1T",
+          "1/2", "1/2D", "1/2T",
+          "1/4", "1/4D", "1/4T",
+          "1/8", "1/8D", "1/8T",
+          "1/16", "1/16D", "1/16T",
+          "1/32", "1/32D", "1/32T",
+          "1/64", "1/64D", "1/64T"
+        ];
+        let idx = Math.round(realValue);
+        idx = Math.max(0, Math.min(20, idx));
+        displayStr = divs[idx];
+      } else {
+        displayStr = Math.round(realValue);
+      }
+    }
+    
+    if (valueDisplay) {
+      valueDisplay.textContent = displayStr;
+    }
+    
+    updateScreenTexts();
+  }
+
+  function toggleButton(btn) {
+    btn.classList.toggle('active');
+    const id = btn.getAttribute('data-id');
+    const isActive = btn.classList.contains('active');
+    if (id) emitJuceToggle(id, isActive);
+    
+    updateScreenTexts();
+  }
+
+  function onSelectChange(selectEl) {
+    const id = selectEl.getAttribute('data-id');
+    const val = parseInt(selectEl.value);
+    emitJuceSlider(id, val);
+    updateScreenTexts();
+  }
+
+  function updateScreenTexts() {
+    const tempo1El = document.querySelector('[data-id="delay1Tempo"]');
+    const tempo2El = document.querySelector('[data-id="delay2Tempo"]');
+    const delayOnEl = document.querySelector('[data-id="delayOn"]');
+    const delayReverseEl = document.querySelector('[data-id="delayReverse"]');
+    
+    const glitchOnEl = document.querySelector('[data-id="glitchOn"]');
+    const glitchReverseEl = document.querySelector('[data-id="glitchReverse"]');
+    
+    const divs = [
+      "1/1", "1/1D", "1/1T",
+      "1/2", "1/2D", "1/2T",
+      "1/4", "1/4D", "1/4T",
+      "1/8", "1/8D", "1/8T",
+      "1/16", "1/16D", "1/16T",
+      "1/32", "1/32D", "1/32T",
+      "1/64", "1/64D", "1/64T"
+    ];
+    
+    const screenStatus = document.getElementById('screenStatus');
+    if (screenStatus) {
+      const delayOn = delayOnEl ? delayOnEl.classList.contains('active') : true;
+      const revOn = delayReverseEl ? delayReverseEl.classList.contains('active') : false;
+      
+      if (!delayOn) {
+        screenStatus.textContent = "DELAY: BYPASS";
+      } else {
+        let tVal1 = 12; // default 1/16 straight
+        if (tempo1El) {
+          const val = parseFloat(tempo1El.getAttribute('data-val')) || 0;
+          tVal1 = Math.round(val * 20);
+        }
+        tVal1 = Math.max(0, Math.min(20, tVal1));
+
+        let tVal2 = 12; // default 1/16 straight
+        if (tempo2El) {
+          const val = parseFloat(tempo2El.getAttribute('data-val')) || 0;
+          tVal2 = Math.round(val * 20);
+        }
+        tVal2 = Math.max(0, Math.min(20, tVal2));
+        
+        screenStatus.textContent = "DELAY: " + divs[tVal1] + " L | " + divs[tVal2] + " R" + (revOn ? " (REV)" : "");
+      }
+    }
+    
+    const screenGlitch = document.getElementById('screenGlitch');
+    if (screenGlitch) {
+      const glitchOn = glitchOnEl ? glitchOnEl.classList.contains('active') : false;
+      const glitchRev = glitchReverseEl ? glitchReverseEl.classList.contains('active') : false;
+      
+      let glitchText = "GLITCH: ";
+      if (!glitchOn) {
+        glitchText += "OFF";
+      } else {
+        glitchText += "ON" + (glitchRev ? " (REV)" : "");
+      }
+      screenGlitch.textContent = glitchText;
+    }
+
+    const granOnEl = document.querySelector('[data-id="granOn"]');
+    const granSizeEl = document.querySelector('[data-id="granSize"]');
+    const tapeOnEl = document.querySelector('[data-id="tapeOn"]');
+    const screenRate = document.getElementById('screenRate');
+    if (screenRate) {
+      const granOn = granOnEl ? granOnEl.classList.contains('active') : false;
+      if (granOn) {
+        let sizeVal = 100;
+        if (granSizeEl) {
+          const val = parseFloat(granSizeEl.getAttribute('data-val')) || 0;
+          sizeVal = Math.round(10 + val * 490);
+        }
+        screenRate.textContent = "GRAN: " + sizeVal + "ms";
+      } else {
+        const tapeOn = tapeOnEl ? tapeOnEl.classList.contains('active') : true;
+        screenRate.textContent = "TAPE: " + (tapeOn ? "ACTIVE" : "BYPASS");
+      }
+    }
+  }
+
+  // --------------------------------------------------------
+  // JUCE BINDINGS
+  // --------------------------------------------------------
+  const isJuce = typeof window.__JUCE__ !== 'undefined';
+
+  let _jucePromiseId = 0;
+  const _jucePromises = new Map();
+  if (isJuce) {
+    window.__JUCE__.backend.addEventListener("__juce__complete", ({ promiseId, result }) => {
+      if (_jucePromises.has(promiseId)) {
+        _jucePromises.get(promiseId).resolve(result);
+        _jucePromises.delete(promiseId);
+      }
+    });
+  }
+
+  function callJuce(name, params = []) {
+    if (!isJuce) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const pid = _jucePromiseId++;
+      _jucePromises.set(pid, { resolve, reject });
+      window.__JUCE__.backend.emitEvent("__juce__invoke", {
+        name: name,
+        params: params,
+        resultId: pid
+      });
+    });
+  }
+
+  // Slider changes
+  function emitJuceSlider(id, val) {
+    if (!isJuce) return;
+    const eventId = "__juce__slider" + id;
+    window.__JUCE__.backend.emitEvent(eventId, {
+      eventType: "valueChanged",
+      value: parseFloat(val)
+    });
+  }
+
+  // Toggle button state changes
+  function emitJuceToggle(id, state) {
+    if (!isJuce) return;
+    const eventId = "__juce__toggle" + id;
+    window.__JUCE__.backend.emitEvent(eventId, {
+      eventType: "valueChanged",
+      value: state
+    });
+  }
+
+  // Set up listeners for changes coming FROM Juce
+  if (isJuce) {
+    document.querySelectorAll('[data-id]').forEach(el => {
+      const id = el.getAttribute('data-id');
+      const isKnob = el.classList.contains('knob-container');
+      const isBtn = el.classList.contains('btn');
+      const isSelect = el.tagName.toLowerCase() === 'select';
+      
+      if (isKnob) {
+        window.__JUCE__.backend.addEventListener("__juce__slider" + id, (e) => {
+          if (e.eventType === "valueChanged") {
+            if (isDragging && currentKnob === el) return;
+            
+            let min = parseFloat(el.getAttribute('data-min') || '0');
+            let max = parseFloat(el.getAttribute('data-max') || '100');
+            let normalized;
+            if (el.getAttribute('data-format') === 'Hz') {
+              normalized = Math.log(e.value / min) / Math.log(max / min);
+            } else {
+              normalized = (e.value - min) / (max - min);
+            }
+            
+            normalized = Math.max(0, Math.min(1, normalized));
+            
+            el.setAttribute('data-val', normalized);
+            updateUIElement(el, normalized, e.value);
+          }
+        });
+        window.__JUCE__.backend.emitEvent("__juce__slider" + id, { eventType: "requestInitialUpdate" });
+      } else if (isBtn) {
+        window.__JUCE__.backend.addEventListener("__juce__toggle" + id, (e) => {
+          if (e.eventType === "valueChanged") {
+            if (e.value) el.classList.add('active');
+            else el.classList.remove('active');
+            
+            updateScreenTexts();
+          }
+        });
+        window.__JUCE__.backend.emitEvent("__juce__toggle" + id, { eventType: "requestInitialUpdate" });
+      } else if (isSelect) {
+        window.__JUCE__.backend.addEventListener("__juce__slider" + id, (e) => {
+          if (e.eventType === "valueChanged") {
+            el.value = Math.round(e.value);
+            updateScreenTexts();
+          }
+        });
+        window.__JUCE__.backend.emitEvent("__juce__slider" + id, { eventType: "requestInitialUpdate" });
+      }
+    });
+  }
+
+  // Preset manager functions
+  function loadPreset() {
+    const selector = document.getElementById("presetSelector");
+    const presetName = selector.value;
+    if (isJuce) {
+      callJuce("loadPreset", [presetName]);
+    }
+  }
+
+  function savePreset() {
+    if (isJuce) {
+      callJuce('setKeyboardFocus', [true]);
+    }
+    const selector = document.getElementById("presetSelector");
+    document.getElementById('presetNameInput').value = selector.value || '';
+    document.getElementById('presetModal').style.display = 'flex';
+    document.getElementById('presetNameInput').focus();
+  }
+
+  function submitPresetSave() {
+    let name = document.getElementById('presetNameInput').value.trim();
+    if (name) {
+      if (isJuce) {
+        callJuce("savePreset", [name]).then(() => {
+          updatePresetsList(name);
+        });
+      } else {
+        updatePresetsList(name);
+      }
+    }
+    document.getElementById('presetModal').style.display = 'none';
+    if (isJuce) {
+      callJuce('setKeyboardFocus', [false]);
+    }
+  }
+
+  function updatePresetsList(activePresetName) {
+    if (!isJuce) return;
+    callJuce("getPresets").then((presets) => {
+      if (!presets) return;
+      const selector = document.getElementById("presetSelector");
+      selector.innerHTML = "";
+      presets.forEach(preset => {
+        const opt = document.createElement("option");
+        opt.textContent = preset;
+        opt.value = preset;
+        if (preset === activePresetName) {
+          opt.selected = true;
+        }
+        selector.appendChild(opt);
+      });
+    });
+  }
+
+  // Populate presets on startup
+  if (isJuce) {
+    setTimeout(() => {
+      callJuce("getCurrentPreset").then((currentName) => {
+        updatePresetsList(currentName);
+      });
+    }, 200);
+  }
+
+  // Initialize screen texts
+  updateScreenTexts();
+
+  // --------------------------------------------------------
+  // BLACK & WHITE VECTORSCOPE (GONIOMETER) ANIMATION
+  // --------------------------------------------------------
+  const canvas = document.getElementById('screenCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  
+  let currentLoopPosVal = 0;
+  let currentMasterGrVal = 0;
+  
+  let leftSamples = [];
+  let rightSamples = [];
+  
+  if (canvas && ctx) {
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    function animateScreen() {
+      // Dark persistence background to create analog vector screen effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const width = canvas.width;
+      const height = canvas.height;
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Draw vectorscope graticule (dotted lines)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 4]);
+      
+      // Vertical Center (Mid / Mono)
+      ctx.beginPath();
+      ctx.moveTo(width / 2, 0);
+      ctx.lineTo(width / 2, height);
+      ctx.stroke();
+      
+      // Horizontal Center (Side / Stereo)
+      ctx.beginPath();
+      ctx.moveTo(0, height / 2);
+      ctx.lineTo(width, height / 2);
+      ctx.stroke();
+      
+      // 45-degree Left/Right Diagonals
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(width, height);
+      ctx.moveTo(width, 0);
+      ctx.lineTo(0, height);
+      ctx.stroke();
+      
+      ctx.setLineDash([]);
+      
+      // Generate simulated audio samples for testing in standalone browser
+      if (!isJuce) {
+        leftSamples = [];
+        rightSamples = [];
+        let time = Date.now() * 0.003;
+        let baseFreq = 0.15;
+        let pan = Math.sin(time * 0.15); // dynamically pan for visual movement
+        for (let i = 0; i < 256; ++i) {
+          let phaseOffset = Math.sin(time * 0.3) * 1.5;
+          let ampL = (0.4 + 0.3 * Math.sin(time * 0.5)) * Math.max(0.0, 1.0 - pan);
+          let ampR = (0.4 + 0.3 * Math.cos(time * 0.4)) * Math.max(0.0, 1.0 + pan);
+          
+          let sL = Math.sin(i * baseFreq + time) * ampL;
+          let sR = Math.sin(i * (baseFreq * 1.01) + time + phaseOffset) * ampR;
+          
+          // Add minor noise for visual grain
+          sL += (Math.random() - 0.5) * 0.04;
+          sR += (Math.random() - 0.5) * 0.04;
+          
+          leftSamples.push(sL);
+          rightSamples.push(sR);
+        }
+        
+        // Also simulate meter tubes in browser
+        let lVol = 0.15 + Math.sin(time * 0.5) * 0.12 + Math.random() * 0.05;
+        let rVol = 0.15 + Math.cos(time * 0.4) * 0.12 + Math.random() * 0.05;
+        
+        const leftFilament = document.querySelector('#leftTube .tube-filament');
+        const rightFilament = document.querySelector('#rightTube .tube-filament');
+        if (leftFilament) {
+          leftFilament.style.height = (lVol * 100) + '%';
+          let glow = lVol * 25;
+          leftFilament.style.boxShadow = `0 0 3px #ff3c00, 0 0 ${glow}px #ff9900, 0 0 ${glow * 2}px #ffcc00`;
+        }
+        if (rightFilament) {
+          rightFilament.style.height = (rVol * 100) + '%';
+          let glow = rVol * 25;
+          rightFilament.style.boxShadow = `0 0 3px #ff3c00, 0 0 ${glow}px #ff9900, 0 0 ${glow * 2}px #ffcc00`;
+        }
+      }
+      
+      // Draw vectorscope trace
+      if (leftSamples.length > 0) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.3 * dpr;
+        ctx.shadowBlur = 3 * dpr;
+        ctx.shadowColor = '#ffffff';
+        ctx.beginPath();
+        
+        let scale = 0.65 * Math.min(width, height) / 2;
+        
+        for (let i = 0; i < leftSamples.length; i++) {
+          let l = leftSamples[i];
+          let r = rightSamples[i];
+          
+          // Goniometer rotation (Mid/Side alignment)
+          let x = (l - r) / 1.4142;
+          let y = (l + r) / 1.4142;
+          
+          let px = width / 2 + x * scale;
+          let py = height / 2 - y * scale;
+          
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+      
+      requestAnimationFrame(animateScreen);
+    }
+    
+    animateScreen();
+  }
+  
+  if (isJuce) {
+    window.__JUCE__.backend.addEventListener("meterData", (e) => {
+      currentLoopPosVal = e.loopPos;
+      currentMasterGrVal = e.master;
+      
+      if (e.leftSamples && e.rightSamples) {
+        leftSamples = e.leftSamples;
+        rightSamples = e.rightSamples;
+      }
+      
+      const screenGr = document.getElementById('screenGr');
+      if (screenGr) {
+        const db = -e.master * 24.0;
+        screenGr.textContent = "GR: " + db.toFixed(1) + "dB";
+      }
+      
+      // Update Glass Tube level meters
+      const leftFilament = document.querySelector('#leftTube .tube-filament');
+      const rightFilament = document.querySelector('#rightTube .tube-filament');
+      
+      if (leftFilament) {
+        let lVol = e.delay1Level || 0;
+        let lHeight = Math.min(100, Math.pow(lVol, 0.5) * 100);
+        leftFilament.style.height = lHeight.toFixed(1) + '%';
+        let glow = Math.min(25, lVol * 25);
+        leftFilament.style.boxShadow = `0 0 3px #ff3c00, 0 0 ${glow}px #ff9900, 0 0 ${glow * 2}px #ffcc00`;
+      }
+      
+      if (rightFilament) {
+        let rVol = e.delay2Level || 0;
+        let rHeight = Math.min(100, Math.pow(rVol, 0.5) * 100);
+        rightFilament.style.height = rHeight.toFixed(1) + '%';
+        let glow = Math.min(25, rVol * 25);
+        rightFilament.style.boxShadow = `0 0 3px #ff3c00, 0 0 ${glow}px #ff9900, 0 0 ${glow * 2}px #ffcc00`;
+      }
+    });
+  }
+  
+  // Initialize screen texts
+  updateScreenTexts();
+
+  // --------------------------------------------------------
+  // VINTAGE SCREEN OSCILLOSCOPE ANIMATION
+  // --------------------------------------------------------
+  const canvas = document.getElementById('screenCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  
+  let currentLoopPosVal = 0;
+  let currentMasterGrVal = 0;
+  let phase = 0;
+  
+  if (canvas && ctx) {
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    function animateScreen() {
+      ctx.fillStyle = 'rgba(8, 10, 9, 0.25)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const width = canvas.width;
+      const height = canvas.height;
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Draw grid
+      ctx.strokeStyle = 'rgba(51, 255, 102, 0.025)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let y = 15; y < height; y += 15) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+      for (let x = 20; x < width; x += 20) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      ctx.stroke();
+      
+      ctx.strokeStyle = '#33ff66';
+      ctx.lineWidth = 2 * dpr;
+      ctx.shadowBlur = 4 * dpr;
+      ctx.shadowColor = '#33ff66';
+      
+      phase += 0.15;
+      
+      // Get parameters for live screen animations
+      const dOnEl = document.querySelector('[data-id="delayOn"]');
+      const dTempoEl = document.querySelector('[data-id="delay1Tempo"]');
+      const dRevEl = document.querySelector('[data-id="delayReverse"]');
+      const dFeedbackEl = document.querySelector('[data-id="delayFeedback"]');
+      
+      const tapeOnEl = document.querySelector('[data-id="tapeOn"]');
+      const destabKnob = document.querySelector('[data-id="tapeDestabilize"]');
+      const ageKnob = document.querySelector('[data-id="tapeAge"]');
+      
+      const dOn = dOnEl ? dOnEl.classList.contains('active') : true;
+      let dTempoIdx = 4;
+      if (dTempoEl) {
+        const val = parseFloat(dTempoEl.getAttribute('data-val')) || 0;
+        dTempoIdx = Math.round(val * 6);
+      }
+      const dRev = dRevEl ? dRevEl.classList.contains('active') : false;
+      
+      let dFeedback = 4.0;
+      if (dFeedbackEl) {
+        const val = parseFloat(dFeedbackEl.getAttribute('data-val')) || 0;
+        dFeedback = 1.0 + val * 15.0;
+      }
+      
+      const tapeOn = tapeOnEl ? tapeOnEl.classList.contains('active') : true;
+      let destab = 0.0;
+      if (destabKnob) destab = parseFloat(destabKnob.getAttribute('data-val')) || 0;
+      let wow = destab;
+      let flutter = destab;
+      let age = 0.0;
+      if (ageKnob) age = parseFloat(ageKnob.getAttribute('data-val')) || 0;
+      
+      // 1. Draw Wave 1 (Left Channel / Delay 1 trace)
+      ctx.beginPath();
+      for (let y = 0; y < height; y++) {
+        let normY = y / height;
+        let x = width * 0.25;
+        
+        if (dOn) {
+          let freq = 0.04 + (dTempoIdx * 0.015);
+          let speed = (dRev ? -phase : phase) * (0.8 + dTempoIdx * 0.2);
+          let w = Math.sin(y * freq + speed) * (1.5 + dFeedback * 0.8) * dpr;
+          if (dRev) {
+            w = Math.round(w / (2 * dpr)) * (2 * dpr);
+          }
+          x += w;
+        }
+        
+        if (Math.abs(normY - currentLoopPosVal) < 0.04) {
+          x += (Math.random() - 0.5) * 4 * dpr;
+        }
+        
+        if (y === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      
+      // 2. Draw Wave 2 (Right Channel / Delay 2 trace with Haas phase spread)
+      ctx.beginPath();
+      for (let y = 0; y < height; y++) {
+        let normY = y / height;
+        let x = width * 0.5;
+        
+        if (dOn) {
+          let freq = 0.048 + (dTempoIdx * 0.012);
+          let speed = (dRev ? -phase : phase) * (0.75 + dTempoIdx * 0.18) * 1.1 + 0.8;
+          let w = Math.sin(y * freq + speed) * (1.5 + dFeedback * 0.8) * dpr;
+          if (dRev) {
+            w = Math.round(w / (2 * dpr)) * (2 * dpr);
+          }
+          x += w;
+        }
+        
+        if (Math.abs(normY - currentLoopPosVal) < 0.04) {
+          x += (Math.random() - 0.5) * 4 * dpr;
+        }
+        
+        if (y === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.setLineDash([4 * dpr, 4 * dpr]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // 3. Draw Wave 3 (Right Column / Tape Wow/Flutter or Granular cloud)
+      const granOnEl = document.querySelector('[data-id="granOn"]');
+      const granOn = granOnEl ? granOnEl.classList.contains('active') : false;
+      const granMixEl = document.querySelector('[data-id="granMix"]');
+      let granMix = 0.0;
+      if (granMixEl) granMix = parseFloat(granMixEl.getAttribute('data-val')) || 0;
+      
+      if (granOn && granMix > 0.0) {
+        // Draw granular clouds
+        ctx.fillStyle = '#33ff66';
+        let numGrains = Math.floor(15 + granMix * 30);
+        for (let i = 0; i < numGrains; i++) {
+          let gx = width * 0.75 + (Math.sin(phase * 0.1 + i) * 10 * dpr) + (Math.random() - 0.5) * 25 * granMix * dpr;
+          let gy = Math.random() * height;
+          let size = (1 + Math.random() * 2) * dpr;
+          
+          ctx.beginPath();
+          ctx.arc(gx, gy, size, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      } else {
+        // Draw Wave 3 as original tape drift line
+        ctx.beginPath();
+        let wowDrift = tapeOn ? Math.sin(phase * 0.06) * (wow * 8.0) * dpr : 0;
+        for (let y = 0; y < height; y++) {
+          let normY = y / height;
+          let flutterJitter = tapeOn ? (Math.random() - 0.5) * (flutter * 6.0 + age * 3.5) * dpr : 0;
+          let x = width * 0.75 + wowDrift + flutterJitter;
+          
+          if (tapeOn && age > 0.4 && Math.random() < (age - 0.4) * 0.02) {
+            x += (Math.random() - 0.5) * 20 * dpr;
+          }
+          
+          if (Math.abs(normY - currentLoopPosVal) < 0.04) {
+            x += (Math.random() - 0.5) * 4 * dpr;
+          }
+          
+          if (y === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      
+      // Draw horizontal playhead scan line
+      const playheadY = currentLoopPosVal * height;
+      ctx.strokeStyle = 'rgba(51, 255, 102, 0.45)';
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(0, playheadY);
+      ctx.lineTo(width, playheadY);
+      ctx.stroke();
+      
+      ctx.shadowBlur = 0;
+      
+      if (!isJuce) {
+        currentLoopPosVal += 0.004;
+        if (currentLoopPosVal > 1.0) currentLoopPosVal = 0;
+        
+        let lVol = 0.15 + Math.sin(phase * 0.5) * 0.12 + Math.random() * 0.05;
+        let rVol = 0.15 + Math.cos(phase * 0.4) * 0.12 + Math.random() * 0.05;
+        
+        const leftFilament = document.querySelector('#leftTube .tube-filament');
+        const rightFilament = document.querySelector('#rightTube .tube-filament');
+        if (leftFilament) {
+          leftFilament.style.height = (lVol * 100) + '%';
+          let glow = lVol * 25;
+          leftFilament.style.boxShadow = `0 0 4px #ff3300, 0 0 ${glow}px #ffaa00, 0 0 ${glow * 2}px #ffdd55`;
+        }
+        if (rightFilament) {
+          rightFilament.style.height = (rVol * 100) + '%';
+          let glow = rVol * 25;
+          rightFilament.style.boxShadow = `0 0 4px #ff3300, 0 0 ${glow}px #ffaa00, 0 0 ${glow * 2}px #ffdd55`;
+        }
+      }
+      
+      requestAnimationFrame(animateScreen);
+    }
+    
+    animateScreen();
+  }
+  
+  if (isJuce) {
+    window.__JUCE__.backend.addEventListener("meterData", (e) => {
+      currentLoopPosVal = e.loopPos;
+      currentMasterGrVal = e.master;
+      
+      const screenGr = document.getElementById('screenGr');
+      if (screenGr) {
+        const db = -e.master * 24.0;
+        screenGr.textContent = "GR: " + db.toFixed(1) + "dB";
+      }
+      
+      // Update Glass Tube level meters
+      const leftFilament = document.querySelector('#leftTube .tube-filament');
+      const rightFilament = document.querySelector('#rightTube .tube-filament');
+      
+      if (leftFilament) {
+        let lVol = e.delay1Level || 0;
+        let lHeight = Math.min(100, Math.pow(lVol, 0.5) * 100);
+        leftFilament.style.height = lHeight.toFixed(1) + '%';
+        let glow = Math.min(25, lVol * 25);
+        leftFilament.style.boxShadow = `0 0 3px #ff3c00, 0 0 ${glow}px #ff9900, 0 0 ${glow * 2}px #ffcc00`;
+      }
+      
+      if (rightFilament) {
+        let rVol = e.delay2Level || 0;
+        let rHeight = Math.min(100, Math.pow(rVol, 0.5) * 100);
+        rightFilament.style.height = rHeight.toFixed(1) + '%';
+        let glow = Math.min(25, rVol * 25);
+        rightFilament.style.boxShadow = `0 0 3px #ff3c00, 0 0 ${glow}px #ff9900, 0 0 ${glow * 2}px #ffcc00`;
+      }
+    });
+  }
+</script>
+</body>
+</html>

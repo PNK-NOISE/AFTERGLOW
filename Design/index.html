@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AFTERGLOW</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paint-white: #EAEAEA;
+      --paint-off: #2A2C30;
+      --led-on: #FFDD99; 
+      
+      --text-main: #0B0C0E; 
+      --text-muted: #242831; 
+      
+      --panel-bg: rgba(255, 255, 255, 0.85); 
+      --panel-border: rgba(0, 0, 0, 0.25);
+      
+      --primary: #FFDD99;
+      --primary-glow: rgba(255, 221, 153, 0.9);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      background-color: #111216; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #plugin-container {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 1500px;
+      height: 500px;
+      transform: translate(-50%, -50%) scale(1);
+      transform-origin: center center;
+      background-image: url('bg_inspired.png');
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 30px 100px rgba(0, 0, 0, 0.85);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .plugin-window {
+      width: 100%;
+      height: 100%;
+      padding: 18px 25px 25px 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.22); 
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--panel-border);
+      padding-bottom: 10px;
+      height: 48px;
+      position: relative;
+    }
+    .brand-logo-img {
+      height: 28px; 
+      object-fit: contain;
+    }
+    .header-center-info {
+      font-size: 8px; 
+      font-weight: 800; 
+      color: var(--text-muted); 
+      letter-spacing: 2px; 
+      text-transform: uppercase;
+      text-align: center;
+      pointer-events: none;
+      position: absolute;
+      left: 50%;
+      top: 19px;
+      transform: translate(-50%, -50%);
+    }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    /* BLENDED IN SELECTS & READOUTS */
+    .control-value {
+      background: rgba(255, 255, 255, 0.95); 
+      color: var(--text-main); 
+      border: 1px solid rgba(0, 0, 0, 0.3);
+      padding: 2px 5px;
+      border-radius: 3px; 
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: 900;
+      outline: none;
+      box-shadow: 
+        inset 1px 1px 3px rgba(0,0,0,0.12), 
+        0 1px 1px rgba(255,255,255,0.8); 
+      position: relative;
+      z-index: 20; 
+      text-align: center;
+      min-width: 42px;
+    }
+
+    .select-dropdown, .preset-btn {
+      background: rgba(255, 255, 255, 0.95); 
+      color: var(--text-main);
+      border: 1px solid rgba(0,0,0,0.3);
+      padding: 4px 10px;
+      border-radius: 3px; 
+      font-family: monospace;
+      font-size: 10px;
+      font-weight: 900;
+      outline: none;
+      box-shadow: 
+        inset 1px 1px 3px rgba(0,0,0,0.12), 
+        0 1px 1px rgba(255,255,255,0.8); 
+      position: relative;
+      z-index: 20; 
+      cursor: pointer;
+    }
+    
+    .preset-btn {
+      font-family: 'Inter', sans-serif;
+    }
+    .preset-btn:active {
+      box-shadow: inset 2px 2px 8px rgba(0,0,0,0.3);
+    }
+    .preset-ui {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* PANELS LAYOUT */
+    .panels-container {
+      display: flex;
+      gap: 15px;
+      flex: 1;
+      align-items: stretch;
+      overflow: visible;
+    }
+    
+    .panel {
+      background: var(--panel-bg);
+      border-radius: 4px; 
+      padding: 12px 14px; 
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04); 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: visible; 
+    }
+    
+    .panel-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      height: 22px;
+    }
+    .panel-title {
+      font-size: 9px;
+      font-weight: 900;
+      color: var(--text-main);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .sub-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .sub-section-title {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      align-self: flex-start;
+      border-bottom: 1px dotted rgba(0,0,0,0.15);
+      padding-bottom: 2px;
+      width: 100%;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .knob-label, .btn-label {
+      font-size: 8px;
+      font-weight: 900;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      text-align: center;
+      white-space: nowrap;
+      position: relative;
+      z-index: 20; 
+      margin-top: 2px;
+    }
+
+    /* KNOBS */
+    .knob-container {
+      position: relative;
+      display: flex; justify-content: center; align-items: center;
+      overflow: visible; 
+      z-index: 10;
+    }
+    
+    .knob-container.large { width: 72px; height: 72px; }
+    .knob-container.small { width: 48px; height: 48px; }
+    
+    .knob-layer {
+      position: absolute;
+      width: 100%; height: 100%;
+      background-size: contain; 
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .knob-shadow {
+      background-image: url('KNOB/Long shadow.png');
+      pointer-events: none;
+      transform: scale(2.8) translate(18%, 15%);
+      z-index: -1; 
+      opacity: 0.90;
+    }
+
+    .knob-move {
+      background-image: url('KNOB/KNOB MOVE.png');
+      z-index: 1;
+      transform: rotate(-135deg);
+    }
+    .knob-stilla {
+      background-image: url('KNOB/KNOB STILLA.png');
+      pointer-events: none;
+      z-index: 2;
+    }
+    .knob-pekare {
+      background-image: url('KNOB/KNOB PEKARE.png');
+      pointer-events: none; 
+      z-index: 3;
+      transform: rotate(-135deg);
+    }
+    .knob-hit-area {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: 50%;
+      cursor: ns-resize;
+      z-index: 10;
+    }
+
+    /* BUTTONS */
+    .btn {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.1s;
+      filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
+      z-index: 10;
+    }
+    .btn:active {
+      transform: translateY(1px) scale(0.96);
+    }
+    .button-sprite {
+      width: 100%; height: 100%;
+      background-image: url('button_matte.png');
+      background-size: cover;
+      background-position: center;
+      border-radius: 3px;
+    }
+    .btn-led {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 28%; height: 28%;
+      background: var(--paint-off);
+      border-radius: 50%;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.8);
+      transition: background 0.1s;
+    }
+    .btn.active .btn-led {
+      background: var(--led-on);
+      box-shadow: 
+        0 0 6px var(--led-on),
+        inset 1px 1px 2px rgba(255,255,255,0.8);
+    }
+
+    /* VECTORSCOPE CRT SCREEN */
+    #vectorgram-screen {
+      width: 100%;
+      height: 220px;
+      background-color: #050608;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.98);
+      position: relative;
+      border: 1px solid rgba(0,0,0,0.4);
+      margin-bottom: 12px;
+    }
+    
+    #vectorgram-screen::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(255, 255, 255, 0.015) 50%, rgba(0, 0, 0, 0.12) 50%);
+      z-index: 10;
+      background-size: 100% 4px;
+      pointer-events: none;
+    }
+    
+    #vectorgram-screen::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0) 80%);
+      pointer-events: none;
+      z-index: 9;
+    }
+    
+    .screen-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Screen Digital Value Display Overlay */
+    #screen-value-overlay {
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center; 
+      pointer-events: none; 
+      z-index: 20; 
+      opacity: 0; 
+      transition: opacity 0.15s ease-out; 
+      font-family: monospace; 
+      text-align: center; 
+      background-color: rgba(5, 6, 8, 0.65);
+    }
+    
+    #overlay-label {
+      font-size: 9px; 
+      font-weight: 700; 
+      color: #ffffff; 
+      letter-spacing: 2px; 
+      text-transform: uppercase; 
+      margin-bottom: 5px; 
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    }
+    
+    #overlay-value {
+      font-size: 20px; 
+      font-weight: 800; 
+      color: #ffffff; 
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Digital CRT Toggles Bar at the bottom of the Screen */
+    #screen-toggles-bar {
+      position: absolute; 
+      bottom: 8px; 
+      left: 0; 
+      width: 100%; 
+      display: flex; 
+      justify-content: space-around; 
+      align-items: center; 
+      z-index: 15; 
+      padding: 0 12px;
+    }
+
+    .screen-btn {
+      width: auto !important;
+      height: auto !important;
+      filter: none !important;
+      color: rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 3px;
+      background: rgba(5, 6, 8, 0.7);
+      padding: 3px 8px;
+      font-family: monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+      transition: all 0.15s ease;
+      display: inline-block;
+    }
+    
+    .screen-btn:hover {
+      color: rgba(255, 255, 255, 0.6);
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .screen-btn.active {
+      color: #ffffff !important;
+      border-color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px rgba(255, 255, 255, 0.5) !important;
+      box-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.2),
+        inset 0 0 4px rgba(255, 255, 255, 0.2) !important;
+    }
+
+    #knob-container-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Preset Modal -->
+  <div id="presetModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.65); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:rgba(255,255,255,0.35); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); padding:24px; border-radius:5px; border: 1px solid rgba(255,255,255,0.35); display:flex; flex-direction:column; gap:15px; width:300px; box-shadow:0 15px 35px rgba(0,0,0,0.25);">
+      <div style="font-weight:900; font-size:12px; color:var(--text-main); text-transform:uppercase; letter-spacing:1px; font-family:'Inter', sans-serif;">Save Preset</div>
+      <input type="text" id="presetNameInput" style="padding:10px; border-radius:3px; border:1px solid rgba(0,0,0,0.2); box-shadow:inset 1px 1px 3px rgba(0,0,0,0.1); background:rgba(255,255,255,0.85); color:#000000; font-family:'Inter', sans-serif; font-size:13px; font-weight:800; outline:none;" placeholder="Preset Name">
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:5px;">
+        <button onclick="document.getElementById('presetModal').style.display='none'; if(isJuce) callJuce('setKeyboardFocus', [false]);" class="preset-btn">Cancel</button>
+        <button onclick="submitPresetSave()" class="preset-btn" style="color: #000; background: var(--led-on); border-color: transparent;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="plugin-container">
+    <div class="plugin-window">
+      
+      <!-- HEADER -->
+      <div class="header">
+        <img src="AFTERGLOW.png" class="brand-logo-img" alt="AFTERGLOW">
+        <div class="header-center-info">PNK NOISE - DELAY - DIRT &amp; GLITCH PROCESSOR</div>
+        <div class="header-controls">
+          <div class="preset-ui">
+            <select class="select-dropdown" id="presetSelector" onchange="loadPreset()">
+              <option>Init Preset</option>
+            </select>
+            <button class="preset-btn" onclick="savePreset()">Save</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- COLUMNS CONTAINER -->
+      <div class="panels-container">
+        
+        <!-- COLUMN 1: DIRT & GRANULIZER (Left) -->
+        <div class="left-panel-col" style="display: flex; flex-direction: column; gap: 15px; width: 320px; height: 100%;">
+          
+          <!-- Dirt Engine Panel -->
+          <div class="panel" style="flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="panel-header">
+              <div class="panel-title">Dirt Engine</div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding: 4px 0 10px 0; margin-top: auto; margin-bottom: auto;">
+              <div class="control-group" style="width:30%;">
+                <div class="knob-container small" data-id="dirt" data-val="0.25" data-default="0.25" data-format="%">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Dirt</div>
+                <div class="control-value">25%</div>
+              </div>
+              
+              <div class="control-group" style="width:30%;">
+                <div class="knob-container small" data-id="tapeDestabilize" data-val="0.0" data-default="0.0" data-format="%">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Destab</div>
+                <div class="control-value">0%</div>
+              </div>
+              
+              <div class="control-group" style="width:30%;">
+                <div class="knob-container small" data-id="tapeAge" data-val="0.0" data-default="0.0" data-format="%">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Age / Noise</div>
+                <div class="control-value">0%</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Granulizer Panel -->
+          <div class="panel" style="flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="panel-header">
+              <div class="panel-title">Granulizer</div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding: 4px 0 10px 0; margin-top: auto; margin-bottom: auto;">
+              <div class="control-group" style="width:30%;">
+                <div class="knob-container small" data-id="granSize" data-val="0.1837" data-default="0.1837" data-format="ms" data-min="10" data-max="500">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Size</div>
+                <div class="control-value">100 ms</div>
+              </div>
+              
+              <div class="control-group" style="width:30%;">
+                <div class="knob-container small" data-id="granPitch" data-val="0.5" data-default="0.5" data-format="st" data-min="-12" data-max="12">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Pitch</div>
+                <div class="control-value">0.0 st</div>
+              </div>
+              
+              <div class="control-group" style="width:30%;">
+                <div class="knob-container small" data-id="granMix" data-val="0.0" data-default="0.0" data-format="%" data-min="0" data-max="100">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Mix</div>
+                <div class="control-value">0%</div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+        <!-- COLUMN 2: VECTORSCOPE & PRIMARY DELAY / GLITCH (Center) -->
+        <div class="panel" style="width: 835px; padding: 12px 20px;">
+          <div class="panel-header">
+            <div class="panel-title">Vectorscope / Delay</div>
+          </div>
+          
+          <!-- CRT Screen -->
+          <div id="vectorgram-screen" style="height: 230px;">
+            <canvas class="screen-canvas" id="screenCanvas"></canvas>
+            <div id="screen-value-overlay">
+              <div id="overlay-label">PARAM</div>
+              <div id="overlay-value">0%</div>
+            </div>
+            <!-- CRT switches inside middle display -->
+            <div id="screen-toggles-bar">
+              <div class="screen-btn btn active" data-id="delayOn">Delay</div>
+              <div class="screen-btn btn active" data-id="dirtOn">Dirt</div>
+              <div class="screen-btn btn" data-id="glitchOn">Glitch</div>
+              <div class="screen-btn btn" data-id="granOn">Gran</div>
+              <div class="screen-btn btn" data-id="chorusOn">Chorus</div>
+            </div>
+          </div>
+          
+          <!-- Primary Delay & Glitch controls -->
+          <div id="knob-container-row" style="padding: 0 15px;">
+            <div class="control-group">
+              <div class="knob-container large" data-id="delayTempo" data-val="0.6" data-default="0.6" data-format="" data-min="0" data-max="20">
+                <div class="knob-layer knob-shadow"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-pekare"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="knob-label">Tempo</div>
+              <div class="control-value">1/16</div>
+            </div>
+            
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayFeedback" data-val="0.5" data-default="0.5" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-shadow"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-pekare"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="knob-label">Feedback</div>
+              <div class="control-value">50%</div>
+            </div>
+            
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayDuck" data-val="0.0" data-default="0.0" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-shadow"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-pekare"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="knob-label">Duck</div>
+              <div class="control-value">0%</div>
+            </div>
+            
+            <div class="control-group">
+              <div class="knob-container small" data-id="delayDryWet" data-val="0.5" data-default="0.5" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-shadow"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-pekare"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="knob-label">Mix</div>
+              <div class="control-value">50%</div>
+            </div>
+            
+            <!-- Glitch knob relocated here -->
+            <div class="control-group">
+              <div class="knob-container small" data-id="glitchAmount" data-val="0.35" data-default="0.35" data-format="%" data-min="0" data-max="100">
+                <div class="knob-layer knob-shadow"></div>
+                <div class="knob-layer knob-move"></div>
+                <div class="knob-layer knob-stilla"></div>
+                <div class="knob-layer knob-pekare"></div>
+                <div class="knob-hit-area"></div>
+              </div>
+              <div class="knob-label">Glitch</div>
+              <div class="control-value">35%</div>
+            </div>
+
+            <div class="control-group" style="padding-top: 4px;">
+              <div class="btn" data-id="delayReverse">
+                <div class="button-sprite"></div>
+                <div class="btn-led"></div>
+              </div>
+              <div class="btn-label">Reverse</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- COLUMN 4: MASTER SECTION -->
+        <div class="panel" style="width: 310px; justify-content: space-between;">
+          <div class="panel-header">
+            <div class="panel-title">Master Output</div>
+          </div>
+          
+          <!-- Master Grid Layout (Clean top/bottom organization) -->
+          <div style="display:flex; flex-direction:column; gap:18px; width:100%; flex: 1; justify-content: center;">
+            <div style="display:flex; justify-content:space-around; width:100%;">
+              <div class="control-group">
+                <div class="knob-container large" data-id="dryWet" data-val="1.0" data-default="1.0" data-format="%">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Dry/Wet</div>
+                <div class="control-value">100%</div>
+              </div>
+              
+              <div class="control-group">
+                <div class="knob-container large" data-id="masterOutput" data-val="0.5" data-default="0.5" data-format="dB" data-min="-24" data-max="24">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Gain</div>
+                <div class="control-value">0.0 dB</div>
+              </div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-around; width:100%;">
+              <div class="control-group">
+                <div class="knob-container small" data-id="wetWidth" data-val="1.0" data-default="1.0" data-format="%">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Width</div>
+                <div class="control-value">100%</div>
+              </div>
+
+              <div class="control-group">
+                <div class="knob-container small" data-id="wetLowCut" data-val="0.0" data-default="0.0" data-format="Hz" data-min="20" data-max="2000">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Wet low cut</div>
+                <div class="control-value">20 Hz</div>
+              </div>
+              
+              <div class="control-group">
+                <div class="knob-container small" data-id="wetHighCut" data-val="1.0" data-default="1.0" data-format="Hz" data-min="200" data-max="20000">
+                  <div class="knob-layer knob-shadow"></div>
+                  <div class="knob-layer knob-move"></div>
+                  <div class="knob-layer knob-stilla"></div>
+                  <div class="knob-layer knob-pekare"></div>
+                  <div class="knob-hit-area"></div>
+                </div>
+                <div class="knob-label">Wet high cut</div>
+                <div class="control-value">20k Hz</div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const isJuce = typeof window.__JUCE__ !== 'undefined';
+    const canvas = document.getElementById('screenCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    
+    let leftSamples = [];
+    let rightSamples = [];
+    
+    // --------------------------------------------------------
+    // VISUAL RESIZING / SCALING
+    // --------------------------------------------------------
+    let currentScale = 1.0;
+    function resizeUI() {
+      const container = document.getElementById('plugin-container');
+      if (!container) return;
+      const scaleX = window.innerWidth / 1500;
+      const scaleY = window.innerHeight / 500;
+      currentScale = Math.min(scaleX, scaleY);
+      container.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+    }
+    window.addEventListener('resize', resizeUI);
+    window.addEventListener('load', resizeUI);
+    document.addEventListener('DOMContentLoaded', resizeUI);
+    setTimeout(resizeUI, 50);
+    setTimeout(resizeUI, 200);
+    resizeUI();
+    
+    // --------------------------------------------------------
+    // JUCE METHOD CALL PROMISE BRIDGE
+    // --------------------------------------------------------
+    let _jucePromiseId = 0;
+    const _jucePromises = new Map();
+    if (isJuce) {
+      window.__JUCE__.backend.addEventListener("__juce__complete", ({ promiseId, result }) => {
+        if (_jucePromises.has(promiseId)) {
+          _jucePromises.get(promiseId).resolve(result);
+          _jucePromises.delete(promiseId);
+        }
+      });
+    }
+
+    function callJuce(name, params = []) {
+      if (!isJuce) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const pid = _jucePromiseId++;
+        _jucePromises.set(pid, { resolve, reject });
+        window.__JUCE__.backend.emitEvent("__juce__invoke", {
+          name: name,
+          params: params,
+          resultId: pid
+        });
+      });
+    }
+    
+    if (canvas && ctx) {
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      
+      function animateScreen() {
+        // Dark persistence background to create analog vector screen trail
+        ctx.fillStyle = 'rgba(5, 6, 8, 0.22)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Draw vectorscope graticule (dotted guides in white)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 4]);
+        
+        let size = Math.min(width, height) * 0.95;
+        let centerX = width / 2;
+        let centerY = height / 2;
+        let halfSize = size / 2;
+        
+        // Vertical Center (Mono)
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY - halfSize);
+        ctx.lineTo(centerX, centerY + halfSize);
+        ctx.stroke();
+        
+        // Horizontal Center
+        ctx.beginPath();
+        ctx.moveTo(centerX - halfSize, centerY);
+        ctx.lineTo(centerX + halfSize, centerY);
+        ctx.stroke();
+        
+        // 45-degree Diagonals
+        ctx.beginPath();
+        ctx.moveTo(centerX - halfSize, centerY - halfSize);
+        ctx.lineTo(centerX + halfSize, centerY + halfSize);
+        ctx.moveTo(centerX + halfSize, centerY - halfSize);
+        ctx.lineTo(centerX - halfSize, centerY + halfSize);
+        ctx.stroke();
+        
+        ctx.setLineDash([]);
+        
+        // Generate simulated audio samples for testing in browser
+        if (!isJuce) {
+          leftSamples = [];
+          rightSamples = [];
+          let time = Date.now() * 0.003;
+          let baseFreq = 0.15;
+          for (let i = 0; i < 256; ++i) {
+            let phaseOffset = Math.sin(time * 0.3) * 1.5;
+            let ampL = 0.5 + 0.2 * Math.sin(time * 0.5);
+            let ampR = 0.5 + 0.2 * Math.cos(time * 0.4);
+            
+            let sL = Math.sin(i * baseFreq + time) * ampL;
+            let sR = Math.sin(i * (baseFreq * 1.01) + time + phaseOffset) * ampR;
+            
+            sL += (Math.random() - 0.5) * 0.03;
+            sR += (Math.random() - 0.5) * 0.03;
+            
+            leftSamples.push(sL);
+            rightSamples.push(sR);
+          }
+        }
+        
+        // Draw vectorscope trace in glowing white
+        if (leftSamples.length > 0) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.3 * dpr;
+          ctx.shadowBlur = 3 * dpr;
+          ctx.shadowColor = '#ffffff';
+          ctx.beginPath();
+          
+          let scale = 0.7 * Math.min(width, height) / 2;
+          
+          for (let i = 0; i < leftSamples.length; i++) {
+            let l = leftSamples[i];
+            let r = rightSamples[i];
+            
+            // Goniometer rotation (Mid/Side alignment)
+            let x = (l - r) / 1.4142;
+            let y = (l + r) / 1.4142;
+            
+            let px = width / 2 + x * scale;
+            let py = height / 2 - y * scale;
+            
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+        
+        requestAnimationFrame(animateScreen);
+      }
+      
+      animateScreen();
+    }
+    
+    // --------------------------------------------------------
+    // KNOB DRAG & INTERACTION SYSTEM
+    // --------------------------------------------------------
+    let isDragging = false;
+    let currentKnob = null;
+    let startY = 0;
+    let startVal = 0;
+
+    function emitJuceSliderDragStarted(id) {
+      if (!isJuce) return;
+      window.__JUCE__.backend.emitEvent("__juce__slider" + id, {
+        eventType: "sliderDragStarted"
+      });
+    }
+
+    function emitJuceSliderDragEnded(id) {
+      if (!isJuce) return;
+      window.__JUCE__.backend.emitEvent("__juce__slider" + id, {
+        eventType: "sliderDragEnded"
+      });
+    }
+
+    function startKnobDrag(knob) {
+      const id = knob.getAttribute('data-id');
+      if (id && isJuce) {
+        if (id === 'delayTempo') {
+          emitJuceSliderDragStarted('delay1Tempo');
+          emitJuceSliderDragStarted('delay2Tempo');
+        } else if (id === 'dirt') {
+          emitJuceSliderDragStarted('tapeSat');
+          emitJuceSliderDragStarted('optoGain');
+        } else {
+          emitJuceSliderDragStarted(id);
+        }
+      }
+    }
+
+    function endKnobDrag(knob) {
+      const id = knob.getAttribute('data-id');
+      if (id) {
+        if (isJuce) {
+          if (id === 'delayTempo') {
+            emitJuceSliderDragEnded('delay1Tempo');
+            emitJuceSliderDragEnded('delay2Tempo');
+            window.__JUCE__.backend.emitEvent("__juce__sliderdelay1Tempo", { eventType: "requestInitialUpdate" });
+          } else if (id === 'dirt') {
+            emitJuceSliderDragEnded('tapeSat');
+            emitJuceSliderDragEnded('optoGain');
+            window.__JUCE__.backend.emitEvent("__juce__slidertapeSat", { eventType: "requestInitialUpdate" });
+          } else {
+            emitJuceSliderDragEnded(id);
+            window.__JUCE__.backend.emitEvent("__juce__slider" + id, { eventType: "requestInitialUpdate" });
+          }
+        }
+      }
+    }
+    
+    document.addEventListener('mousedown', (e) => {
+      const isSelect = e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'select';
+      const isInput = e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'input';
+      if (!isSelect && !isInput) {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+        if (isJuce) {
+          callJuce('setKeyboardFocus', [false]);
+        }
+      }
+    });
+
+    // Bind listeners to each knob element directly
+    document.querySelectorAll('.knob-container').forEach(el => {
+      const cap = el.querySelector('.knob-hit-area');
+      if (!cap) return;
+      
+      cap.addEventListener('mousedown', (e) => {
+        e.preventDefault(); 
+        isDragging = true;
+        currentKnob = el;
+        startY = e.clientY;
+        startVal = parseFloat(el.getAttribute('data-val')) || 0;
+        startKnobDrag(el);
+        
+        const trackHeight = 150; // knob sensitivity
+
+        function onMouseMove(e) {
+          if (!isDragging || currentKnob !== el) return;
+          let deltaY = (startY - e.clientY) / currentScale;
+          let deltaPct = deltaY / trackHeight;
+          
+          let newVal = Math.max(0, Math.min(1, startVal + deltaPct));
+          el.setAttribute('data-val', newVal);
+          
+          let mappedVal = getMappedValue(el, newVal);
+          updateUIElement(el, newVal, mappedVal);
+          
+          // Emit to JUCE
+          const id = el.getAttribute('data-id');
+          if (id) {
+            if (id === 'delayTempo') {
+              emitJuceSlider('delay1Tempo', mappedVal);
+              emitJuceSlider('delay2Tempo', mappedVal);
+            } else if (id === 'dirt') {
+              emitJuceSlider('tapeSat', mappedVal);
+              emitJuceSlider('optoGain', mappedVal);
+            } else {
+              emitJuceSlider(id, mappedVal);
+            }
+          }
+        }
+        
+        function onMouseUp() {
+          if (isDragging && currentKnob === el) {
+            endKnobDrag(el);
+            hideOverlayWithDelay(800);
+          }
+          isDragging = false;
+          currentKnob = null;
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        }
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      // Double click default reset
+      cap.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        let defaultVal = parseFloat(el.getAttribute('data-default') || '0.5');
+        startKnobDrag(el);
+        el.setAttribute('data-val', defaultVal);
+        let mapped = getMappedValue(el, defaultVal);
+        
+        isDragging = true;
+        currentKnob = el;
+        updateUIElement(el, defaultVal, mapped);
+        isDragging = false;
+        currentKnob = null;
+        
+        const id = el.getAttribute('data-id');
+        if (id) {
+          if (id === 'delayTempo') {
+            emitJuceSlider('delay1Tempo', mapped);
+            emitJuceSlider('delay2Tempo', mapped);
+          } else if (id === 'dirt') {
+            emitJuceSlider('tapeSat', mapped);
+            emitJuceSlider('optoGain', mapped);
+          } else {
+            emitJuceSlider(id, mapped);
+          }
+        }
+        
+        endKnobDrag(el);
+        hideOverlayWithDelay(1000);
+      });
+
+      // Touch interaction support
+      cap.addEventListener('touchstart', (e) => {
+        e.preventDefault(); 
+        isDragging = true;
+        currentKnob = el;
+        startY = e.touches[0].clientY;
+        startVal = parseFloat(el.getAttribute('data-val')) || 0;
+        startKnobDrag(el);
+        
+        const trackHeight = 150;
+
+        function onTouchMove(e) {
+          if (!isDragging || currentKnob !== el) return;
+          let deltaY = (startY - e.touches[0].clientY) / currentScale;
+          let deltaPct = deltaY / trackHeight;
+          
+          let newVal = Math.max(0, Math.min(1, startVal + deltaPct));
+          el.setAttribute('data-val', newVal);
+          
+          let mappedVal = getMappedValue(el, newVal);
+          updateUIElement(el, newVal, mappedVal);
+          
+          const id = el.getAttribute('data-id');
+          if (id) {
+            if (id === 'delayTempo') {
+              emitJuceSlider('delay1Tempo', mappedVal);
+              emitJuceSlider('delay2Tempo', mappedVal);
+            } else if (id === 'dirt') {
+              emitJuceSlider('tapeSat', mappedVal);
+              emitJuceSlider('optoGain', mappedVal);
+            } else {
+              emitJuceSlider(id, mappedVal);
+            }
+          }
+        }
+        
+        function onTouchEnd() {
+          if (isDragging && currentKnob === el) {
+            endKnobDrag(el);
+            hideOverlayWithDelay(800);
+          }
+          isDragging = false;
+          currentKnob = null;
+          document.removeEventListener('touchmove', onTouchMove);
+          document.removeEventListener('touchend', onTouchEnd);
+        }
+        
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd);
+      }, { passive: false });
+    });
+    
+    // --------------------------------------------------------
+    // UI VALUE MAPPING & ROTATION
+    // --------------------------------------------------------
+    function getMappedValue(el, normalized) {
+      let min = parseFloat(el.getAttribute('data-min') || '0');
+      let max = parseFloat(el.getAttribute('data-max') || '100');
+      if (el.getAttribute('data-format') === 'Hz') {
+        return min * Math.pow(max / min, normalized);
+      }
+      return min + normalized * (max - min);
+    }
+    
+    window.overlayTimeout = null;
+    function hideOverlayWithDelay(delayMs) {
+      if (window.overlayTimeout) clearTimeout(window.overlayTimeout);
+      window.overlayTimeout = setTimeout(() => {
+        let overlay = document.getElementById('screen-value-overlay');
+        if (overlay) overlay.style.opacity = '0';
+      }, delayMs);
+    }
+
+    function updateUIElement(el, normalized, realValue) {
+      let moveLayer = el.querySelector('.knob-move');
+      let pekareLayer = el.querySelector('.knob-pekare');
+      let angle = -135 + (normalized * 270);
+      if (moveLayer) moveLayer.style.transform = `rotate(${angle}deg)`;
+      if (pekareLayer) pekareLayer.style.transform = `rotate(${angle}deg)`;
+      
+      // Update value display
+      let valDisplay = el.parentElement.querySelector('.control-value');
+      if (valDisplay) {
+        let format = el.getAttribute('data-format') || '';
+        let displayStr = '';
+        
+        if (format === 'Hz') {
+          displayStr = realValue >= 1000 ? (realValue / 1000.0).toFixed(1) + 'k Hz' : Math.round(realValue) + ' Hz';
+        } else if (format === '%') {
+          displayStr = Math.round(normalized * 100) + '%';
+        } else if (format === 'ms') {
+          displayStr = Math.round(realValue) + ' ms';
+        } else if (format === 'st') {
+          let sign = realValue > 0.05 ? '+' : '';
+          displayStr = sign + realValue.toFixed(1) + ' st';
+        } else if (format === 'dB') {
+          displayStr = realValue.toFixed(1) + ' dB';
+        } else {
+          const id = el.getAttribute('data-id');
+          if (id === 'delayTempo') {
+            const divs = [
+              "1/1", "1/1D", "1/1T", "1/2", "1/2D", "1/2T",
+              "1/4", "1/4D", "1/4T", "1/8", "1/8D", "1/8T",
+              "1/16", "1/16D", "1/16T", "1/32", "1/32D", "1/32T",
+              "1/64", "1/64D", "1/64T"
+            ];
+            let idx = Math.round(realValue);
+            idx = Math.max(0, Math.min(20, idx));
+            displayStr = divs[idx];
+          } else {
+            displayStr = Math.round(realValue);
+          }
+        }
+        valDisplay.textContent = displayStr;
+      }
+      
+      // Update vectorscope screen overlay values
+      let overlay = document.getElementById('screen-value-overlay');
+      let overlayLabel = document.getElementById('overlay-label');
+      let overlayValue = document.getElementById('overlay-value');
+      if (overlay && overlayLabel && overlayValue && isDragging && currentKnob === el) {
+        let labelEl = el.parentElement.querySelector('.knob-label') || el.parentElement.querySelector('.btn-label');
+        let labelText = labelEl ? labelEl.textContent.trim() : (el.getAttribute('data-id') || 'Value');
+        overlayLabel.textContent = labelText;
+        overlayValue.textContent = valDisplay ? valDisplay.textContent : Math.round(realValue);
+        overlay.style.opacity = '1';
+        if (window.overlayTimeout) {
+          clearTimeout(window.overlayTimeout);
+          window.overlayTimeout = null;
+        }
+      }
+    }
+    
+    // Toggle buttons click handler
+    function toggleButton(btn) {
+      btn.classList.toggle('active');
+      const id = btn.getAttribute('data-id');
+      const isActive = btn.classList.contains('active');
+      if (id) {
+        if (id === 'dirtOn') {
+          emitJuceToggle('tapeOn', isActive);
+          emitJuceToggle('optoOn', isActive);
+        } else {
+          emitJuceToggle(id, isActive);
+        }
+      }
+    }
+    
+    // Wire button elements
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleButton(btn);
+      });
+    });
+    
+    // --------------------------------------------------------
+    // PRESET ENGINE CONTROLS
+    // --------------------------------------------------------
+    function loadPreset() {
+      const selector = document.getElementById("presetSelector");
+      const presetName = selector.value;
+      if (isJuce) {
+        callJuce("loadPreset", [presetName]);
+      }
+    }
+
+    function savePreset() {
+      if (isJuce) {
+        callJuce('setKeyboardFocus', [true]);
+      }
+      const selector = document.getElementById("presetSelector");
+      document.getElementById('presetNameInput').value = selector.value || '';
+      document.getElementById('presetModal').style.display = 'flex';
+      document.getElementById('presetNameInput').focus();
+    }
+
+    function submitPresetSave() {
+      let name = document.getElementById('presetNameInput').value.trim();
+      if (name) {
+        if (isJuce) {
+          callJuce("savePreset", [name]).then(() => {
+            updatePresetsList(name);
+          });
+        } else {
+          updatePresetsList(name);
+        }
+      }
+      document.getElementById('presetModal').style.display = 'none';
+      if (isJuce) {
+        callJuce('setKeyboardFocus', [false]);
+      }
+    }
+
+    function updatePresetsList(activePresetName) {
+      if (!isJuce) return;
+      callJuce("getPresets").then((presets) => {
+        if (!presets) return;
+        const selector = document.getElementById("presetSelector");
+        selector.innerHTML = "";
+        presets.forEach(preset => {
+          const opt = document.createElement("option");
+          opt.textContent = preset;
+          opt.value = preset;
+          if (preset === activePresetName) {
+            opt.selected = true;
+          }
+          selector.appendChild(opt);
+        });
+      });
+    }
+    
+    // --------------------------------------------------------
+    // JUCE WEBVIEW BRIDGE BINDINGS
+    // --------------------------------------------------------
+    function emitJuceSlider(id, val) {
+      if (!isJuce) return;
+      window.__JUCE__.backend.emitEvent("__juce__slider" + id, {
+        eventType: "valueChanged",
+        value: parseFloat(val)
+      });
+    }
+    
+    function emitJuceToggle(id, state) {
+      if (!isJuce) return;
+      window.__JUCE__.backend.emitEvent("__juce__toggle" + id, {
+        eventType: "valueChanged",
+        value: state
+      });
+    }
+    
+    // JUCE Events Listener
+    if (isJuce) {
+      document.querySelectorAll('[data-id]').forEach(el => {
+        const id = el.getAttribute('data-id');
+        const isKnob = el.classList.contains('knob-container');
+        const isBtn = el.classList.contains('btn');
+        
+        if (isKnob) {
+          const listenId = id === 'delayTempo' ? 'delay1Tempo' : (id === 'dirt' ? 'tapeSat' : id);
+          window.__JUCE__.backend.addEventListener("__juce__slider" + listenId, (e) => {
+            if (e.eventType === "valueChanged") {
+              if (isDragging && currentKnob === el) return;
+              
+              let min = parseFloat(el.getAttribute('data-min') || '0');
+              let max = parseFloat(el.getAttribute('data-max') || '100');
+              let normalized;
+              if (el.getAttribute('data-format') === 'Hz') {
+                normalized = Math.log(e.value / min) / Math.log(max / min);
+              } else {
+                normalized = (e.value - min) / (max - min);
+              }
+              normalized = Math.max(0, Math.min(1, normalized));
+              el.setAttribute('data-val', normalized);
+              updateUIElement(el, normalized, e.value);
+            }
+          });
+          window.__JUCE__.backend.emitEvent("__juce__slider" + listenId, { eventType: "requestInitialUpdate" });
+        } else if (isBtn) {
+          const listenId = id === 'dirtOn' ? 'tapeOn' : id;
+          window.__JUCE__.backend.addEventListener("__juce__toggle" + listenId, (e) => {
+            if (e.eventType === "valueChanged") {
+              if (e.value) el.classList.add('active');
+              else el.classList.remove('active');
+            }
+          });
+          window.__JUCE__.backend.emitEvent("__juce__toggle" + listenId, { eventType: "requestInitialUpdate" });
+        }
+      });
+      
+      // Populate presets on startup
+      setTimeout(() => {
+        callJuce("getCurrentPreset").then((currentName) => {
+          updatePresetsList(currentName);
+        });
+      }, 200);
+      
+      // Listen to the vectorscope buffer events from DSP thread
+      window.__JUCE__.backend.addEventListener("meterData", (e) => {
+        if (e.leftSamples && e.rightSamples) {
+          leftSamples = e.leftSamples;
+          rightSamples = e.rightSamples;
+        }
+      });
+    } else {
+      // Standalone browser mode initialization
+      document.querySelectorAll('.knob-container').forEach(el => {
+        let val = parseFloat(el.getAttribute('data-val')) || 0.5;
+        let mapped = getMappedValue(el, val);
+        updateUIElement(el, val, mapped);
+      });
+    }
+  </script>
+</body>
+</html>
