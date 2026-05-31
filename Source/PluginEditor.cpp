@@ -30,9 +30,19 @@ MICROLOOPAudioProcessorEditor::MICROLOOPAudioProcessorEditor (MICROLOOPAudioProc
       granSizeAttachment(*p.apvts.getParameter("GRAN_SIZE"), granSizeRelay, p.apvts.undoManager),
       granPitchAttachment(*p.apvts.getParameter("GRAN_PITCH"), granPitchRelay, p.apvts.undoManager),
       granMixAttachment(*p.apvts.getParameter("GRAN_MIX"), granMixRelay, p.apvts.undoManager),
-      webBrowser(juce::WebBrowserComponent::Options{}
-                 .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
-                 .withNativeIntegrationEnabled()
+      webBrowser([]() {
+          auto options = juce::WebBrowserComponent::Options{}
+              .withBackend(juce::WebBrowserComponent::Options::Backend::webview2);
+         #if JUCE_WINDOWS
+          options = options.withWinWebView2Options(
+              juce::WebBrowserComponent::Options::WinWebView2{}
+                  .withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory)
+                                      .getChildFile("com.pnknoise.afterglow.webview2"))
+          );
+         #endif
+          return options;
+      }()
+      .withNativeIntegrationEnabled()
                  .withOptionsFrom(delayOnRelay)
                  .withOptionsFrom(delay1TempoRelay)
                  .withOptionsFrom(delay2TempoRelay)
