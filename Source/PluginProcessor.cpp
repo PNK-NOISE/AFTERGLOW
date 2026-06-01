@@ -780,14 +780,9 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         delayWetL = wetLpfL.processSample(wetHpfL.processSample(delayWetL));
         delayWetR = wetLpfR.processSample(wetHpfR.processSample(delayWetR));
         
-        // Mix the wet delay signal with the glitched signal based on the delay dry/wet parameter
-        float delayMixVal = delayDryWet;
-        float wetL = glitchedL * (1.0f - delayMixVal) + delayWetL * delayMixVal;
-        float wetR = glitchedR * (1.0f - delayMixVal) + delayWetR * delayMixVal;
-        
-        // Mix Dry (with wow/flutter) and Wet
-        float combinedL = dryL * (1.0f - dryWet) + wetL * dryWet;
-        float combinedR = dryR * (1.0f - dryWet) + wetR * dryWet;
+        // Mix Dry (with wow/flutter) and Wet Delay signal based on the delay dry/wet parameter
+        float combinedL = dryL * (1.0f - delayDryWet) + delayWetL * delayDryWet;
+        float combinedR = dryR * (1.0f - delayDryWet) + delayWetR * delayDryWet;
         
         // Apply Tape Saturation & Glue Compressor (gentle compression, extreme saturation)
         if (tapeOn) {
@@ -1031,8 +1026,9 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         outL = std::tanh(outL);
         outR = std::tanh(outR);
         
-        float finalL = outL * outGain;
-        float finalR = outR * outGain;
+        // Apply master dry/wet mix between clean input and processed output
+        float finalL = (inputL * (1.0f - dryWet) + outL * dryWet) * outGain;
+        float finalR = (inputR * (1.0f - dryWet) + outR * dryWet) * outGain;
         
         buffer.setSample(0, sample, finalL);
         if (totalNumOutputChannels > 1) {
