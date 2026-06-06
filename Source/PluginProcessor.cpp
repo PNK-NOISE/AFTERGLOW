@@ -776,10 +776,6 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         float delayWetL = delay1OutL * delay1Envelope;
         float delayWetR = delay2OutR * delay2Envelope;
         
-        // Apply Master Filters ONLY to the wet delay outputs
-        delayWetL = wetLpfL.processSample(wetHpfL.processSample(delayWetL));
-        delayWetR = wetLpfR.processSample(wetHpfR.processSample(delayWetR));
-        
         // Additive mixing (level-style) so dry signal volume is untouched by the delay mix (scaled to 16.0f max gain)
         float combinedL = dryL + delayWetL * delayDryWet * 16.0f;
         float combinedR = dryR + delayWetR * delayDryWet * 16.0f;
@@ -1070,18 +1066,26 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         float finalDryL = dryL * dryScaleL;
         float finalDryR = dryR * dryScaleR;
         
+        // Separate the pure wet effects from the combined signal
+        float pureWetL = combinedL - finalDryL;
+        float pureWetR = combinedR - finalDryR;
+        
+        // Apply the master wet filters to the entire wet chain
+        float filteredWetL = wetLpfL.processSample(wetHpfL.processSample(pureWetL));
+        float filteredWetR = wetLpfR.processSample(wetHpfR.processSample(pureWetR));
+        
         if (dryWet <= 0.5f) {
             // First 50% of the knob: blend from pure clean dry to full processed signal (which contains dry and wet)
             float wetMix = dryWet * 2.0f;
-            float outL = std::tanh(combinedL);
-            float outR = std::tanh(combinedR);
+            float outL = std::tanh(finalDryL + filteredWetL);
+            float outR = std::tanh(finalDryR + filteredWetR);
             finalL = (inputL * (1.0f - wetMix) + outL * wetMix) * outGain;
             finalR = (inputR * (1.0f - wetMix) + outR * wetMix) * outGain;
         } else {
             // Last 50% of the knob: fade out the dry signal component to 0, leaving only the wet effects
             float dryFade = 2.0f * (1.0f - dryWet);
-            float outL = std::tanh(combinedL + finalDryL * (dryFade - 1.0f));
-            float outR = std::tanh(combinedR + finalDryR * (dryFade - 1.0f));
+            float outL = std::tanh(filteredWetL + finalDryL * dryFade);
+            float outR = std::tanh(filteredWetR + finalDryR * dryFade);
             finalL = outL * outGain;
             finalR = outR * outGain;
         }
