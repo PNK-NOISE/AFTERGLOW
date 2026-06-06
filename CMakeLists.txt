@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS" FORCE)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
-project(AFTERGLOW VERSION 1.0.0)
+project(AFTERGLOW VERSION 1.1.0)
 
 # Build Universal Binary for macOS (Apple Silicon + Intel)
 if(APPLE)

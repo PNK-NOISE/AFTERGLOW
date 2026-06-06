@@ -631,7 +631,7 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         float dryL = glitchedL;
         float dryR = glitchedR;
         
-        if (tapeOn && (tapeWow > 0.0f || tapeFlutter > 0.0f)) {
+        if (tapeOn) {
             tapeDry.updateOffset(currentSampleRate, tapeWow, tapeFlutter, random);
             
             tapeDry.delayLine.pushSample(0, glitchedL);
@@ -780,9 +780,12 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         delayWetL = wetLpfL.processSample(wetHpfL.processSample(delayWetL));
         delayWetR = wetLpfR.processSample(wetHpfR.processSample(delayWetR));
         
-        // Mix Dry (with wow/flutter) and Wet Delay signal based on the delay dry/wet parameter
-        float combinedL = dryL * (1.0f - delayDryWet) + delayWetL * delayDryWet;
-        float combinedR = dryR * (1.0f - delayDryWet) + delayWetR * delayDryWet;
+        // Additive mixing (level-style) so dry signal volume is untouched by the delay mix (scaled to 16.0f max gain)
+        float combinedL = dryL + delayWetL * delayDryWet * 16.0f;
+        float combinedR = dryR + delayWetR * delayDryWet * 16.0f;
+        
+        float dryScaleL = 1.0f;
+        float dryScaleR = 1.0f;
         
         // Apply Tape Saturation & Glue Compressor (gentle compression, extreme saturation)
         if (tapeOn) {
@@ -805,6 +808,9 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             combinedL *= gr;
             combinedR *= gr;
             
+            dryScaleL *= gr;
+            dryScaleR *= gr;
+            
             // Store GR for meter
             currentMasterGR.store(1.0f - gr);
             
@@ -812,8 +818,23 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             float satDrive = 1.0f + tapeSat * 15.0f; // up to 16x drive
             float satGain = 1.0f / std::sqrt(satDrive);
             
-            combinedL = std::tanh(combinedL * satDrive) * satGain;
-            combinedR = std::tanh(combinedR * satDrive) * satGain;
+            float satGainL = 1.0f;
+            if (std::abs(combinedL) > 0.0001f) {
+                satGainL = std::tanh(combinedL * satDrive) * satGain / combinedL;
+            } else {
+                satGainL = satDrive * satGain;
+            }
+            combinedL = combinedL * satGainL;
+            dryScaleL *= satGainL;
+
+            float satGainR = 1.0f;
+            if (std::abs(combinedR) > 0.0001f) {
+                satGainR = std::tanh(combinedR * satDrive) * satGain / combinedR;
+            } else {
+                satGainR = satDrive * satGain;
+            }
+            combinedR = combinedR * satGainR;
+            dryScaleR *= satGainR;
             
             // Age filter & tape noise injection
             if (tapeAge > 0.0f) {
@@ -874,8 +895,26 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             clipL = juce::jlimit(-1.3f, 1.3f, clipL);
             clipR = juce::jlimit(-1.3f, 1.3f, clipR);
             
-            combinedL = (clipL - std::tanh(offset)) * makeup;
-            combinedR = (clipR - std::tanh(offset)) * makeup;
+            float outputL = (clipL - std::tanh(offset)) * makeup;
+            float outputR = (clipR - std::tanh(offset)) * makeup;
+            
+            float optoGainL = 1.0f;
+            if (std::abs(combinedL) > 0.0001f) {
+                optoGainL = outputL / combinedL;
+            } else {
+                optoGainL = dynamicDrive * makeup;
+            }
+            combinedL = outputL;
+            dryScaleL *= optoGainL;
+            
+            float optoGainR = 1.0f;
+            if (std::abs(combinedR) > 0.0001f) {
+                optoGainR = outputR / combinedR;
+            } else {
+                optoGainR = dynamicDrive * makeup;
+            }
+            combinedR = outputR;
+            dryScaleR *= optoGainR;
         }
         
         // Apply Chorus to the WHOLE signal at the end of the chain
@@ -884,12 +923,12 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             float sr = static_cast<float>(currentSampleRate);
             
             // Voice 1: deep, slow modulation, panned wide. High-cut at 1800Hz, Low-cut at 130Hz.
-            float wetL1 = chorusL1.process(combinedL, 0.55f, 4.2f, 18.0f, sr, 0.0f, 1800.0f, 130.0f);
-            float wetR1 = chorusR1.process(combinedR, 0.55f, 4.2f, 18.0f, sr, 0.5f, 1800.0f, 130.0f);
+            float wetL1 = chorusL1.process(combinedL, 0.55f, 6.5f, 18.0f, sr, 0.0f, 1800.0f, 130.0f);
+            float wetR1 = chorusR1.process(combinedR, 0.55f, 6.5f, 18.0f, sr, 0.5f, 1800.0f, 130.0f);
             
             // Voice 2: faster modulation for lush density, offset phase. High-cut at 1600Hz, Low-cut at 140Hz.
-            float wetL2 = chorusL2.process(combinedL, 0.85f, 2.8f, 24.0f, sr, 0.25f, 1600.0f, 140.0f);
-            float wetR2 = chorusR2.process(combinedR, 0.85f, 2.8f, 24.0f, sr, 0.75f, 1600.0f, 140.0f);
+            float wetL2 = chorusL2.process(combinedL, 0.85f, 4.2f, 24.0f, sr, 0.25f, 1600.0f, 140.0f);
+            float wetR2 = chorusR2.process(combinedR, 0.85f, 4.2f, 24.0f, sr, 0.75f, 1600.0f, 140.0f);
             
             // Sum voices
             float wetL = 0.5f * (wetL1 + wetL2);
@@ -902,6 +941,10 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             // Mix dry and wide wet signals with gain compensation to prevent level drops
             combinedL = combinedL * 0.85f + wideL * 0.5f;
             combinedR = combinedR * 0.85f + wideR * 0.5f;
+            
+            // Set dryScale to 0 because we do NOT want the master Dry/Wet knob to remove the dry component from the chorus
+            dryScaleL = 0.0f;
+            dryScaleR = 0.0f;
         }
         
         // Apply Granulizer to the WHOLE signal just before the output stage
@@ -940,14 +983,15 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                         grain.panL = std::cos(p * juce::MathConstants<float>::halfPi);
                         grain.panR = std::sin(p * juce::MathConstants<float>::halfPi);
                         
-                        // Safe offset calculation to prevent grains from crossing the write pointer
+                        // Tight, speed-compensated offset to keep playback in sync with the dry signal
                         float grainDurationSecs = granSizeMs / 1000.0f;
-                        float minOffset = grainDurationSecs * grain.speed + 0.02f;
-                        float maxOffset = minOffset + 0.30f;
-                        maxOffset = std::min(maxOffset, 1.8f);
-                        minOffset = std::min(minOffset, maxOffset - 0.05f);
+                        float minOffsetSecs = 0.010f; // 10ms baseline to avoid write pointer collision
+                        if (grain.speed > 1.0f) {
+                            minOffsetSecs += grainDurationSecs * (grain.speed - 1.0f);
+                        }
+                        float maxOffsetSecs = minOffsetSecs + 0.020f; // tight 20ms random variation
                         
-                        float offsetSecs = minOffset + random.nextFloat() * (maxOffset - minOffset);
+                        float offsetSecs = minOffsetSecs + random.nextFloat() * (maxOffsetSecs - minOffsetSecs);
                         int offsetSamples = static_cast<int>(offsetSecs * currentSampleRate);
                         
                         double start = granWritePos - offsetSamples;
@@ -1007,12 +1051,12 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             }
             
             // Scale output to keep gain consistent
-            granOutL *= 0.5f;
-            granOutR *= 0.5f;
+            granOutL *= 1.5f;
+            granOutR *= 1.5f;
             
-            // Mix
-            combinedL = combinedL * (1.0f - granMix) + granOutL * granMix;
-            combinedR = combinedR * (1.0f - granMix) + granOutR * granMix;
+            // Additive mixing (level-knob style) so dry signal volume is untouched
+            combinedL = combinedL + granOutL * granMix;
+            combinedR = combinedR + granOutR * granMix;
         }
         
         if (granBufSize > 0) {
@@ -1020,15 +1064,27 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             if (granWritePos >= granBufSize) granWritePos = 0;
         }
         
-        float outL = combinedL;
-        float outR = combinedR;
+        float finalL = 0.0f;
+        float finalR = 0.0f;
         
-        outL = std::tanh(outL);
-        outR = std::tanh(outR);
+        float finalDryL = dryL * dryScaleL;
+        float finalDryR = dryR * dryScaleR;
         
-        // Apply master dry/wet mix between clean input and processed output
-        float finalL = (inputL * (1.0f - dryWet) + outL * dryWet) * outGain;
-        float finalR = (inputR * (1.0f - dryWet) + outR * dryWet) * outGain;
+        if (dryWet <= 0.5f) {
+            // First 50% of the knob: blend from pure clean dry to full processed signal (which contains dry and wet)
+            float wetMix = dryWet * 2.0f;
+            float outL = std::tanh(combinedL);
+            float outR = std::tanh(combinedR);
+            finalL = (inputL * (1.0f - wetMix) + outL * wetMix) * outGain;
+            finalR = (inputR * (1.0f - wetMix) + outR * wetMix) * outGain;
+        } else {
+            // Last 50% of the knob: fade out the dry signal component to 0, leaving only the wet effects
+            float dryFade = 2.0f * (1.0f - dryWet);
+            float outL = std::tanh(combinedL + finalDryL * (dryFade - 1.0f));
+            float outR = std::tanh(combinedR + finalDryR * (dryFade - 1.0f));
+            finalL = outL * outGain;
+            finalR = outR * outGain;
+        }
         
         buffer.setSample(0, sample, finalL);
         if (totalNumOutputChannels > 1) {
@@ -1081,7 +1137,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MICROLOOPAudioProcessor::cre
     params.push_back(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID("DELAY2_TEMPO", 1), "Delay 2 Sync", delayDivisions, 12)); // default 1/16 straight
     
     params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID("DELAY_REVERSE", 1), "Delay Reverse Mode", false));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DELAY_DRYWET", 1), "Delay Mix (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DELAY_DRYWET", 1), "Delay Gain (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DELAY_DUCK", 1), "Delay Duck (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DELAY_FEEDBACK", 1), "Delay Feedback (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DELAY_OFFSET", 1), "Delay Offset (%)", juce::NormalisableRange<float>(-20.0f, 20.0f, 1.0f), 0.0f));

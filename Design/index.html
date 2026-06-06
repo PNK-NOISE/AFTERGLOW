@@ -655,7 +655,7 @@
                 <div class="knob-layer knob-pekare"></div>
                 <div class="knob-hit-area"></div>
               </div>
-              <div class="knob-label">Mix</div>
+              <div class="knob-label">Delay Gain</div>
               <div class="control-value">50%</div>
             </div>
             
@@ -1012,6 +1012,11 @@
           let deltaPct = deltaY / trackHeight;
           
           let newVal = Math.max(0, Math.min(1, startVal + deltaPct));
+          if (el.getAttribute('data-id') === 'dryWet') {
+            if (newVal >= 0.46 && newVal <= 0.54) {
+              newVal = 0.5;
+            }
+          }
           el.setAttribute('data-val', newVal);
           
           let mappedVal = getMappedValue(el, newVal);
@@ -1095,6 +1100,11 @@
           let deltaPct = deltaY / trackHeight;
           
           let newVal = Math.max(0, Math.min(1, startVal + deltaPct));
+          if (el.getAttribute('data-id') === 'dryWet') {
+            if (newVal >= 0.46 && newVal <= 0.54) {
+              newVal = 0.5;
+            }
+          }
           el.setAttribute('data-val', newVal);
           
           let mappedVal = getMappedValue(el, newVal);
