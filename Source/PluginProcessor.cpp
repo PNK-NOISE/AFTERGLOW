@@ -776,9 +776,9 @@ void MICROLOOPAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         float delayWetL = delay1OutL * delay1Envelope;
         float delayWetR = delay2OutR * delay2Envelope;
         
-        // Additive mixing (level-style) so dry signal volume is untouched by the delay mix (scaled to 16.0f max gain)
-        float combinedL = dryL + delayWetL * delayDryWet * 16.0f;
-        float combinedR = dryR + delayWetR * delayDryWet * 16.0f;
+        // Additive mixing (level-style) so dry signal volume is untouched by the delay mix (scaled to 1.0f max gain)
+        float combinedL = dryL + delayWetL * delayDryWet;
+        float combinedR = dryR + delayWetR * delayDryWet;
         
         float dryScaleL = 1.0f;
         float dryScaleR = 1.0f;
@@ -1172,7 +1172,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MICROLOOPAudioProcessor::cre
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("GRAN_MIX", 1), "Granulizer Mix (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 0.0f));
     
     // Global output controls
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DRY_WET", 1), "Dry/Wet (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 100.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DRY_WET", 1), "Dry/Wet (%)", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 50.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("MASTER_OUTPUT", 1), "Master Output (dB)", juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f), 0.0f));
     
     // Optical Distortion
